@@ -14,7 +14,7 @@ import static junit.framework.TestCase.*;
 
 
 /**
- * Created by dvirsky on 09/02/17.
+ * @author Mark Nunberg
  */
 public class ClientTest {
     static final int port;
@@ -114,4 +114,29 @@ public class ClientTest {
         assertTrue(rv[3]);
         assertFalse(rv[4]);
     }
+
+    @Test
+    public void testExample() throws Exception {
+        Client client = cl;
+        // Simple bloom filter using default module settings
+        client.add("simpleBloom", "Mark");
+        // Does "Mark" now exist?
+        client.exists("simpleBloom", "Mark"); // true
+        client.exists("simpleBloom", "Farnsworth"); // False
+
+        // If you have a long list of items to check/add, you can use the
+        // "multi" methods
+
+        client.addMulti("simpleBloom", "foo", "bar", "baz", "bat", "bag");
+
+        // Check if they exist:
+        boolean[] rv = client.existsMulti("simpleBloom", "foo", "bar", "baz", "bat", "mark", "nonexist");
+        // All items except the last one will be 'true'
+
+
+        // Reserve a "customized" bloom filter
+        client.createFilter("specialBloom", 10000, 0.0001);
+        client.add("specialBloom", "foo");
+    }
+
 }
