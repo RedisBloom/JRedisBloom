@@ -19,11 +19,15 @@ public class Client {
     }
 
     private Connection sendCommand(Command command, String ...args) {
-        return _conn().getClient().sendCommand(command, args);
+        Connection client = _conn().getClient();
+        client.sendCommand(command, args);
+        return client;
     }
 
     private Connection sendCommand(Command command, byte[]... args) {
-        return _conn().getClient().sendCommand(command, args);
+      Connection client = _conn().getClient();
+      client.sendCommand(command, args);
+      return client;
     }
 
     /**

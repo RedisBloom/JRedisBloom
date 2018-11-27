@@ -6,14 +6,53 @@
 
     <groupId>com.redislabs</groupId>
     <artifactId>jrebloom</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1.SNAPSHOT</version>
+    
+    <name>JReBloom</name>
+	<description>Official client for ReBloom</description>
+	<url>https://oss.redislabs.com/rebloom</url>
+
+	<organization>
+		<name>RedisLabs</name>
+		<url>www.redislabs.com</url>
+	</organization>
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/RedisLabs/JReBloom/issues</url>
+    </issueManagement>
+    <scm>
+        <connection>scm:git:git@github.com:RedisLabs/JReBloom.git</connection>
+        <url>scm:git:git@github.com:RedisLabs/JReBloom.git</url>
+        <developerConnection>scm:git:git@github.com:RedisLabs/JReBloom.git</developerConnection>
+        <tag>1.0.0</tag>
+    </scm>
+    <developers>
+        <developer>
+            <name>Mark Nunberg</name>
+            <organization>redislabs</organization>
+            <organizationUrl>https://redislabs.com/</organizationUrl>
+        </developer>
+    </developers>
+	<licenses>
+		<license>
+			<name>BSD 2 Clause</name>
+			<url>https://opensource.org/licenses/BSD-2-Clause</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.test.source>8</maven.test.source>
+		<maven.test.target>8</maven.test.target>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/jedis-3.0.0.jar</systemPath>
+            <version>3.0.0-m1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -31,51 +70,91 @@
             <version>4.12</version>
         </dependency>
     </dependencies>
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-        <maven.test.source>8</maven.test.source>
-        <maven.test.target>8</maven.test.target>
-    </properties>
-
-
+    <distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+		    <id>ossrh</id>
+    		<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+  		</repository>
+	</distributionManagement>
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <!--<mainClass></mainClass>-->
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-my-jar-with-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+            
         </plugins>
     </build>
+    <profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<!--Include sources and docs -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.2.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.9.1</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
 
-
-
-
+					<!--Sign the components - this is required by maven central for releases -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

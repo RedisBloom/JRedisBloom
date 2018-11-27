@@ -1,3 +1,5 @@
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom)
+
 # JReBloom
 
 A Java Client Library for [ReBloom](https://rebloom.io)
@@ -5,9 +7,45 @@ A Java Client Library for [ReBloom](https://rebloom.io)
 ## Overview 
 
 This project contains a Java library abstracting the API of the ReBloom Redis module, that implements a high
-perfomance bloom filter with an easy-to-use API
+performance bloom filter with an easy-to-use API
  
 See [http://rebloom.io](http://rebloom.io) for installation instructions of the module.
+
+
+### Official Releases
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>com.redislabs</groupId>
+      <artifactId>jrebloom</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Snapshots
+
+```xml
+  <repositories>
+    <repository>
+      <id>snapshots-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
+```
+
+and
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>com.redislabs</groupId>
+      <artifactId>jrebloom</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+```
+
 
 ## Usage example
 

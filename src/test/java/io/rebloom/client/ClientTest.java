@@ -2,13 +2,7 @@ package io.rebloom.client;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisException;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import static junit.framework.TestCase.*;
 
@@ -30,13 +24,13 @@ public class ClientTest {
     Client cl = null;
 
     @Before
-    public void clearDb() throws Exception {
+    public void clearDb() {
         cl = new Client("localhost", port);
         cl._conn().flushDB();
     }
 
     @Test
-    public void reserveBasic() throws Exception {
+    public void reserveBasic() {
         cl.createFilter("myBloom", 100, 0.001);
         assertTrue(cl.add("myBloom", "val1"));
         assertTrue(cl.exists("myBloom", "val1"));
@@ -44,23 +38,23 @@ public class ClientTest {
     }
 
     @Test(expected = JedisException.class)
-    public void reserveValidateZeroCapacity() throws Exception {
+    public void reserveValidateZeroCapacity() {
         cl.createFilter("myBloom", 0, 0.001);
     }
 
     @Test(expected = JedisException.class)
-    public void reserveValidateZeroError() throws Exception {
+    public void reserveValidateZeroError() {
         cl.createFilter("myBloom", 100, 0);
     }
 
     @Test(expected = JedisException.class)
-    public void reserveAlreadyExists() throws Exception {
+    public void reserveAlreadyExists() {
         cl.createFilter("myBloom", 100, 0.1);
         cl.createFilter("myBloom", 100, 0.1);
     }
 
     @Test
-    public void addExistsString() throws Exception {
+    public void addExistsString() {
         assertTrue(cl.add("newFilter", "foo"));
         assertTrue(cl.exists("newFilter", "foo"));
         assertFalse(cl.exists("newFilter", "bar"));
@@ -68,20 +62,19 @@ public class ClientTest {
     }
 
     @Test
-    public void addExistsByte() throws Exception {
+    public void addExistsByte() {
         assertTrue(cl.add("newFilter", "foo".getBytes()));
         assertFalse(cl.add("newFilter", "foo".getBytes()));
         assertTrue(cl.exists("newFilter", "foo".getBytes()));
         assertFalse(cl.exists("newFilter", "bar".getBytes()));
     }
 
-    @Test(expected = JedisException.class)
-    public void testExistsNonExist() throws Exception {
-        cl.exists("nonExist", "foo");
+    public void testExistsNonExist() {
+      assertFalse(cl.exists("nonExist", "foo"));
     }
 
     @Test
-    public void addExistsMulti() throws Exception {
+    public void addExistsMulti() {
         boolean rv[] = cl.addMulti("newFilter", "foo", "bar", "baz");
         assertEquals(3, rv.length);
         for (boolean i : rv) {
@@ -116,7 +109,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testExample() throws Exception {
+    public void testExample() {
         Client client = cl;
         // Simple bloom filter using default module settings
         client.add("simpleBloom", "Mark");

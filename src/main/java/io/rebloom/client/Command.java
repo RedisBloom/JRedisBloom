@@ -1,7 +1,7 @@
 package io.rebloom.client;
 
 import redis.clients.jedis.commands.ProtocolCommand;
-import redis.clients.util.SafeEncoder;
+import redis.clients.jedis.util.SafeEncoder;
 
 // TODO: Move this to the client and autocompleter as two different enums
 public enum Command implements ProtocolCommand {
