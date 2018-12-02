@@ -5,6 +5,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisException;
+import redis.clients.jedis.util.Pool;
 
 import java.util.*;
 
@@ -12,8 +13,8 @@ import java.util.*;
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
  */
 public class Client {
-  private JedisPool pool;
-
+  private final Pool<Jedis> pool;
+  
   Jedis _conn() {
     return pool.getResource();
   }
@@ -31,9 +32,20 @@ public class Client {
   }
 
   /**
-   * Create a new client to a RediSearch index
+   * Create a new client to ReBloom
+   * @param pool Jedis connection pool to be used 
+   */
+  public Client(Pool<Jedis> pool){
+    this.pool = pool;
+  }
+ 
+  
+  /**
+   * Create a new client to ReBloom
    * @param host the redis host
-   * @param port the redis pot
+   * @param port the redis port
+   * @param timeout connection timeout
+   * @param poolSize the poolSize of JedisPool
    */
   public Client(String host, int port, int timeout, int poolSize) {
     JedisPoolConfig conf = new JedisPoolConfig();
@@ -50,6 +62,11 @@ public class Client {
     pool = new JedisPool(conf, host, port, timeout);
   }
 
+  /**
+   * Create a new client to ReBloom
+   * @param host the redis host
+   * @param port the redis port
+   */
   public Client(String host, int port) {
     this(host, port, 500, 100);
   }
