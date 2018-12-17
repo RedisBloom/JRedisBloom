@@ -51,7 +51,7 @@ and
 
 Initializing the client:
 
-```java
+``` java
 import io.rebloom.client.Client
 
 Client client = new Client("localhost", 6378);
@@ -59,7 +59,7 @@ Client client = new Client("localhost", 6378);
 
 Adding items to a bloom filter (created using default settings):
 
-```java
+``` java
 client.add("simpleBloom", "Mark");
 // Does "Mark" now exist?
 client.exists("simpleBloom", "Mark"); // true
@@ -83,3 +83,30 @@ client.createFilter("specialBloom", 10000, 0.0001);
 client.add("specialBloom", "foo");
 
 ```
+
+Use cluster client to call redis cluster
+Initializing the cluster client:
+```java
+Set<HostAndPort> jedisClusterNodes = new HashSet<>();
+jedisClusterNodes.add(new HostAndPort("test02", 7000));
+jedisClusterNodes.add(new HostAndPort("test02", 7001));
+jedisClusterNodes.add(new HostAndPort("test02", 7002));
+jedisClusterNodes.add(new HostAndPort("test02", 7003));
+jedisClusterNodes.add(new HostAndPort("test02", 7004));
+jedisClusterNodes.add(new HostAndPort("test02", 7005));
+ClusterClient cclient = new ClusterClient(jedisClusterNodes);
+```
+
+Adding items to a bloom filter (created using default settings):
+
+``` java
+cclient.add("simpleBloom", "Mark");
+// Does "Mark" now exist?
+cclient.exists("simpleBloom", "Mark"); // true
+cclient.exists("simpleBloom", "Farnsworth"); // False
+```
+
+all method of ClusterClient is same to Client.
+
+
+
