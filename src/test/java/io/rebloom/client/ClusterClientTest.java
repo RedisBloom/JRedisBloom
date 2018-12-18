@@ -25,12 +25,10 @@ public class ClusterClientTest {
     @Before
     public void newCCL() {
         Set<HostAndPort> jedisClusterNodes = new HashSet<>();
-        jedisClusterNodes.add(new HostAndPort("localhost", 7000));
-        jedisClusterNodes.add(new HostAndPort("localhost", 7001));
-        jedisClusterNodes.add(new HostAndPort("localhost", 7002));
-        jedisClusterNodes.add(new HostAndPort("localhost", 7003));
-        jedisClusterNodes.add(new HostAndPort("localhost", 7004));
-        jedisClusterNodes.add(new HostAndPort("localhost", 7005));
+        jedisClusterNodes.add(new HostAndPort("localhost", 6379));
+//        jedisClusterNodes.add(new HostAndPort("localhost", 6380));
+//        jedisClusterNodes.add(new HostAndPort("localhost", 6381));
+//        jedisClusterNodes.add(new HostAndPort("localhost", 6382));
         ccl = new ClusterClient(jedisClusterNodes);
     }
 
