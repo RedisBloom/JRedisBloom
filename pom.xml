@@ -6,7 +6,7 @@
 
     <groupId>com.redislabs</groupId>
     <artifactId>jrebloom</artifactId>
-    <version>1.0.2.SNAPSHOT</version>
+    <version>1.1.0</version>
     
     <name>JReBloom</name>
 	<description>Official client for ReBloom</description>
