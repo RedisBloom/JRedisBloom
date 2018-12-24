@@ -83,3 +83,25 @@ client.createFilter("specialBloom", 10000, 0.0001);
 client.add("specialBloom", "foo");
 
 ```
+
+Use cluster client to call redis cluster
+Initializing the cluster client:
+```java
+Set<HostAndPort> jedisClusterNodes = new HashSet<>();
+jedisClusterNodes.add(new HostAndPort("localhost", 7000));
+ClusterClient cclient = new ClusterClient(jedisClusterNodes);
+```
+
+Adding items to a bloom filter (created using default settings):
+
+```java
+cclient.add("simpleBloom", "Mark");
+// Does "Mark" now exist?
+cclient.exists("simpleBloom", "Mark"); // true
+cclient.exists("simpleBloom", "Farnsworth"); // False
+```
+
+all method of ClusterClient is same to Client.
+
+
+
