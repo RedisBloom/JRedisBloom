@@ -51,7 +51,7 @@ and
 
 Initializing the client:
 
-``` java
+```java
 import io.rebloom.client.Client
 
 Client client = new Client("localhost", 6378);
@@ -59,7 +59,7 @@ Client client = new Client("localhost", 6378);
 
 Adding items to a bloom filter (created using default settings):
 
-``` java
+```java
 client.add("simpleBloom", "Mark");
 // Does "Mark" now exist?
 client.exists("simpleBloom", "Mark"); // true
@@ -94,7 +94,7 @@ ClusterClient cclient = new ClusterClient(jedisClusterNodes);
 
 Adding items to a bloom filter (created using default settings):
 
-``` java
+```java
 cclient.add("simpleBloom", "Mark");
 // Does "Mark" now exist?
 cclient.exists("simpleBloom", "Mark"); // true
