@@ -1,15 +1,24 @@
 package io.rebloom.client;
 
 import junit.framework.TestCase;
+
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import redis.clients.jedis.ClusterReset;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -20,28 +29,104 @@ import static org.junit.Assert.assertTrue;
 public class ClusterClientTest {
 
 
-    ClusterClient ccl = null;
+    private ClusterClient ccl = null;
 
+    private static HostAndPort nodeInfo1 = new HostAndPort("127.0.0.1", 7379);
+    private static HostAndPort nodeInfo2 = new HostAndPort("127.0.0.1", 7380);
+    private static HostAndPort nodeInfo3 = new HostAndPort("127.0.0.1", 7381);
+    private static Jedis node1;
+    private static Jedis node2;
+    private static Jedis node3;
+
+    @BeforeClass
+    public static void setUp() throws InterruptedException {
+      node1 = new Jedis(nodeInfo1);
+      node1.flushAll();
+
+      node2 = new Jedis(nodeInfo2);
+      node2.flushAll();
+
+      node3 = new Jedis(nodeInfo3);
+      node3.flushAll();
+
+      // add nodes to cluster
+      node1.clusterMeet("127.0.0.1", nodeInfo2.getPort());
+      node1.clusterMeet("127.0.0.1", nodeInfo3.getPort());
+
+      // split available slots across the three nodes
+      int slotsPerNode = JedisCluster.HASHSLOTS / 3;
+      int[] node1Slots = new int[slotsPerNode];
+      int[] node2Slots = new int[slotsPerNode + 1];
+      int[] node3Slots = new int[slotsPerNode];
+      for (int i = 0, slot1 = 0, slot2 = 0, slot3 = 0; i < JedisCluster.HASHSLOTS; i++) {
+        if (i < slotsPerNode) {
+          node1Slots[slot1++] = i;
+        } else if (i > slotsPerNode * 2) {
+          node3Slots[slot3++] = i;
+        } else {
+          node2Slots[slot2++] = i;
+        }
+      }
+
+      node1.clusterAddSlots(node1Slots);
+      node2.clusterAddSlots(node2Slots);
+      node3.clusterAddSlots(node3Slots);
+
+      waitForClusterReady(node1, node2, node3);      
+    }
+    
+    @AfterClass
+    public static void cleanUp() {
+      node1.flushDB();
+      node2.flushDB();
+      node3.flushDB();
+      node1.clusterReset(ClusterReset.SOFT);
+      node2.clusterReset(ClusterReset.SOFT);
+      node3.clusterReset(ClusterReset.SOFT);
+    }
+    
     @Before
     public void newCCL() {
         Set<HostAndPort> jedisClusterNodes = new HashSet<>();
-        jedisClusterNodes.add(new HostAndPort("localhost", 6379));
+        jedisClusterNodes.add(new HostAndPort("127.0.0.1", 7379));
         ccl = new ClusterClient(jedisClusterNodes);
+        
+        node1.flushDB();
+        node2.flushDB();
+        node3.flushDB();
+    }   
+    
+    private static void waitForClusterReady(Jedis... nodes) throws InterruptedException {
+      boolean clusterOk = false;
+      while (!clusterOk) {
+        boolean isOk = true;
+        for (Jedis node : nodes) {
+          if (!node.clusterInfo().split("\n")[0].contains("ok")) {
+            isOk = false;
+            break;
+          }
+        }
+
+        if (isOk) {
+          clusterOk = true;
+        }
+
+        Thread.sleep(50);
+      }
     }
 
     @Test
     public void reserveBasic() {
-        boolean res = ccl.createFilter("myBloom", 100, 0.001);
+        assertTrue(ccl.createFilter("myBloom", 100, 0.001));
         assertTrue(ccl.add("myBloom", "val1"));
         assertTrue(ccl.exists("myBloom", "val1"));
         assertFalse(ccl.exists("myBloom", "val2"));
-        assertTrue(res);
     }
 
     @Test
     public void delete(){
-        boolean res = ccl.delete("newFilter");
-        assertTrue(res);
+        ccl.createFilter("newFilter", 100, 0.001);
+        assertTrue(ccl.delete("newFilter"));
     }
 
     @Test(expected = JedisException.class)
@@ -56,7 +141,7 @@ public class ClusterClientTest {
 
     @Test(expected = JedisException.class)
     public void reserveAlreadyExists() {
-        ccl.createFilter("myBloom", 100, 0.1);
+        assertTrue(ccl.createFilter("myBloom", 100, 0.1));
         ccl.createFilter("myBloom", 100, 0.1);
     }
 
@@ -110,5 +195,4 @@ public class ClusterClientTest {
         TestCase.assertTrue(rv[3]);
         TestCase.assertFalse(rv[4]);
     }
-
 }
