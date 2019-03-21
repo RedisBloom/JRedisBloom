@@ -200,4 +200,9 @@ public class Client {
   public void delete(String name) {
     _conn().getClient().del(name);
   }
+
+  public void close(){
+    this.pool.close();
+  }
+
 }
