@@ -196,9 +196,11 @@ public class Client {
   /**
    * Remove the filter
    * @param name
+   * @return true if delete the filter, false is not delete the filter
    */
-  public void delete(String name) {
+  public boolean delete(String name) {
     _conn().getClient().del(name);
+    return _conn().getClient().getIntegerReply() != 0;
   }
 
   public void close(){
