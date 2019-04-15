@@ -31,9 +31,9 @@ public class ClusterClientTest {
 
     private ClusterClient ccl = null;
 
-    private static HostAndPort nodeInfo1 = new HostAndPort("127.0.0.1", 7379);
-    private static HostAndPort nodeInfo2 = new HostAndPort("127.0.0.1", 7380);
-    private static HostAndPort nodeInfo3 = new HostAndPort("127.0.0.1", 7381);
+    private final static HostAndPort nodeInfo1 = new HostAndPort("127.0.0.1", 7379);
+    private final static HostAndPort nodeInfo2 = new HostAndPort("127.0.0.1", 7380);
+    private final static HostAndPort nodeInfo3 = new HostAndPort("127.0.0.1", 7381);
     private static Jedis node1;
     private static Jedis node2;
     private static Jedis node3;
