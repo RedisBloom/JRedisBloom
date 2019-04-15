@@ -199,8 +199,9 @@ public class Client {
    * @return true if delete the filter, false is not delete the filter
    */
   public boolean delete(String name) {
-    _conn().getClient().del(name);
-    return _conn().getClient().getIntegerReply() != 0;
+      try(Jedis conn = _conn()){
+          return conn.del(name) != 0;
+      }
   }
 
   public void close(){
