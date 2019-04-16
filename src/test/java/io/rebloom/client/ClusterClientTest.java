@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import redis.clients.jedis.ClusterReset;
@@ -26,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author TommyYang on 2018/12/17
  */
+@Ignore
 public class ClusterClientTest {
 
 
