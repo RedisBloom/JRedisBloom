@@ -7,12 +7,13 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.Pool;
 
+import java.io.Closeable;
 import java.util.*;
 
 /**
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
  */
-public class Client {
+public class Client implements Closeable {
   private final Pool<Jedis> pool;
   
   Jedis _conn() {
@@ -196,8 +197,17 @@ public class Client {
   /**
    * Remove the filter
    * @param name
+   * @return true if delete the filter, false is not delete the filter
    */
-  public void delete(String name) {
-    _conn().getClient().del(name);
+  public boolean delete(String name) {
+      try(Jedis conn = _conn()){
+          return conn.del(name) != 0;
+      }
   }
+
+  @Override
+  public void close(){
+    this.pool.close();
+  }
+
 }

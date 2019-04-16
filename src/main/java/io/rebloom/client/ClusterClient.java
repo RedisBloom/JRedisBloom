@@ -3,7 +3,6 @@ package io.rebloom.client;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.*;
 import redis.clients.jedis.Client;
-import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -257,6 +256,5 @@ public class ClusterClient extends JedisCluster {
 
         return ret;
     }
-
 
 }
