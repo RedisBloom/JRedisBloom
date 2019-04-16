@@ -7,12 +7,13 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.Pool;
 
+import java.io.Closeable;
 import java.util.*;
 
 /**
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
  */
-public class Client {
+public class Client implements Closeable {
   private final Pool<Jedis> pool;
   
   Jedis _conn() {
@@ -204,6 +205,7 @@ public class Client {
       }
   }
 
+  @Override
   public void close(){
     this.pool.close();
   }
