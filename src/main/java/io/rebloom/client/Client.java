@@ -83,7 +83,7 @@ public class Client implements Closeable {
    */
   public void createFilter(String name, long initCapacity, double errorRate) {
     try (Jedis conn = _conn()) {
-      String rep = sendCommand(conn, Command.RESERVE, name, errorRate + "", initCapacity + "").getStatusCodeReply();
+      String rep = sendCommand(conn, Command.RESERVE, name, Double.toString(errorRate), Long.toString(initCapacity)).getStatusCodeReply();
 
       if (!rep.equals("OK")) {
         throw new JedisException(rep);
