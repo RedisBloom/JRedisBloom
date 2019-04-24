@@ -6,6 +6,7 @@ import redis.clients.jedis.exceptions.JedisException;
 
 import static junit.framework.TestCase.*;
 
+import java.util.Arrays;
 
 /**
  * @author Mark Nunberg
@@ -123,9 +124,9 @@ public class ClientTest {
         client.addMulti("simpleBloom", "foo", "bar", "baz", "bat", "bag");
 
         // Check if they exist:
-        boolean[] rv = client.existsMulti("simpleBloom", "foo", "bar", "baz", "bat", "mark", "nonexist");
+        boolean[] rv = client.existsMulti("simpleBloom", "foo", "bar", "baz", "bat", "Mark", "nonexist");
         // All items except the last one will be 'true'
-
+        assertEquals(Arrays.toString(new boolean[]{true, true, true, true, true, false}), Arrays.toString(rv));
 
         // Reserve a "customized" bloom filter
         client.createFilter("specialBloom", 10000, 0.0001);
