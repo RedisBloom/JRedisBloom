@@ -4,11 +4,15 @@ import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Protocol;
+import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.Pool;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
@@ -20,13 +24,20 @@ public class Client implements Closeable {
     return pool.getResource();
   }
 
-  private Connection sendCommand(Jedis conn, Command command, String ...args) {
+  private Connection sendCommand(Jedis conn, String key, ProtocolCommand command, String ...args) {
+    String[] fullArgs = new String[args.length + 1];
+    fullArgs[0] = key;
+    System.arraycopy(args, 0, fullArgs, 1, args.length);
+    return sendCommand(conn, command, fullArgs);
+  }
+  
+  private Connection sendCommand(Jedis conn, ProtocolCommand command, String ...args) {
     Connection client = conn.getClient();
     client.sendCommand(command, args);
     return client;
   }
 
-  private Connection sendCommand(Jedis conn, Command command, byte[]... args) {
+  private Connection sendCommand(Jedis conn, ProtocolCommand command, byte[]... args) {
     Connection client = conn.getClient();
     client.sendCommand(command, args);
     return client;
@@ -204,6 +215,109 @@ public class Client implements Closeable {
           return conn.del(name) != 0;
       }
   }
+  
+  /**
+   * TOPK.RESERVE key topk width depth decay
+   * 
+   * Reserve a topk filter.
+   * @param key The key of the filter
+   * @param topk
+   * @param width
+   * @param depth
+   * @param decay
+   *
+   * Note that if a filter is not reserved, a new one is created when {@link #add(String, byte[])}
+   * is called.
+   */
+  public void topkCreateFilter(String key, long topk, long width, long depth, double decay) {
+    try (Jedis conn = _conn()) {
+      String rep = sendCommand(conn, TopKCommand.RESERVE,  SafeEncoder.encode(key), Protocol.toByteArray(topk), 
+          Protocol.toByteArray(width), Protocol.toByteArray(depth),Protocol.toByteArray(decay))
+          .getStatusCodeReply();
+
+      if (!rep.equals("OK")) {
+        throw new JedisException(rep);
+      }
+    }
+  }
+  
+ /**
+  * TOPK.ADD key item [item ...]
+  * 
+  * Adds an item to the filter
+  * @param key The key of the filter
+  * @param items The items to add to the filter
+  * @return list of items dropped from the list.
+  */
+ public List<String> topkAdd(String key, String ...items) {
+   try (Jedis conn = _conn()) {
+     return sendCommand(conn, key, TopKCommand.ADD, items).getMultiBulkReply();
+   }
+ }
+ 
+ /**
+  * TOPK.INCRBY key item increment [item increment ...]
+  * 
+  * Adds an item to the filter
+  * @param key The key of the filter
+  * @param item The item to to increment
+  * @return list of items dropped from the list.
+  */
+ public String topkIncrBy(String key, String item, long increment) {
+   try (Jedis conn = _conn()) {
+     return sendCommand(conn, TopKCommand.INCRBY, SafeEncoder.encode(key), SafeEncoder.encode(item), Protocol.toByteArray(increment))
+         .getMultiBulkReply().get(0);
+   }
+ }
+ 
+ /**
+  * TOPK.QUERY key item [item ...]
+  * 
+  * Checks whether an item is one of Top-K items.
+  * 
+  * @param key The key of the filter
+  * @param items The items to check in the list
+  * @return list of indicator for each item requested
+  */
+ public List<Boolean> topkQuery(String key, String ...items) {
+   try (Jedis conn = _conn()) {
+     return sendCommand(conn, key, TopKCommand.QUERY, items)
+         .getIntegerMultiBulkReply()
+         .stream().map(s -> s!=0)
+         .collect(Collectors.toList());
+   }
+ }
+ 
+ /**
+  * TOPK.COUNT key item [item ...]
+  * 
+  * Returns count for an item.
+  * 
+  * @param key The key of the filter
+  * @param items The items to check in the list
+  * @return list of counters per item.
+  */
+ public List<Long> topkCount(String key, String ...items) {
+   try (Jedis conn = _conn()) {
+     return sendCommand(conn, key, TopKCommand.COUNT, items)
+         .getIntegerMultiBulkReply();
+   }
+ }
+ 
+ /**
+  * TOPK.LIST key
+  * 
+  * Return full list of items in Top K list.
+  * 
+  * @param key The key of the filter
+  * @return list of items in the list.
+  */
+ public List<String> topkList(String key) {
+   try (Jedis conn = _conn()) {
+     return sendCommand(conn, TopKCommand.LIST, key)
+         .getMultiBulkReply();
+   }
+ }
 
   @Override
   public void close(){
