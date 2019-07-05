@@ -377,7 +377,7 @@ public class ClusterClient extends JedisCluster {
             @Override
             public List<String> execute(Jedis jedis) {
                 Connection conn = jedis.getClient();
-                conn.sendCommand(TopKCommand.LIST);
+                conn.sendCommand(TopKCommand.LIST, key);
                 return conn.getMultiBulkReply();
             }
         }).run(key);
