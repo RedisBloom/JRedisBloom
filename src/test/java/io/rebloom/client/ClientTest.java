@@ -6,6 +6,7 @@ import redis.clients.jedis.exceptions.JedisException;
 
 import static junit.framework.TestCase.*;
 
+import java.util.Arrays;
 
 /**
  * @author Mark Nunberg
@@ -123,13 +124,30 @@ public class ClientTest {
         client.addMulti("simpleBloom", "foo", "bar", "baz", "bat", "bag");
 
         // Check if they exist:
-        boolean[] rv = client.existsMulti("simpleBloom", "foo", "bar", "baz", "bat", "mark", "nonexist");
+        boolean[] rv = client.existsMulti("simpleBloom", "foo", "bar", "baz", "bat", "Mark", "nonexist");
         // All items except the last one will be 'true'
-
+        assertEquals(Arrays.toString(new boolean[]{true, true, true, true, true, false}), Arrays.toString(rv));
 
         // Reserve a "customized" bloom filter
         client.createFilter("specialBloom", 10000, 0.0001);
         client.add("specialBloom", "foo");
+    }
+   
+    @Test
+    public void createTopKFilter() {
+      cl.topkCreateFilter("aaa", 30, 2000, 7, 0.925);
+      
+      assertEquals(Arrays.asList(null, null), cl.topkAdd("aaa", "bb", "cc"));
+      
+      assertEquals(Arrays.asList(true, false, true), cl.topkQuery("aaa", "bb", "gg", "cc"));
+      
+      assertEquals(Arrays.asList(1L, 0L, 1L), cl.topkCount("aaa", "bb", "gg", "cc"));
+
+      assertTrue( cl.topkList("aaa").stream().allMatch( s -> Arrays.asList("bb", "cc").contains(s) || s == null));
+      
+      assertEquals(null, cl.topkIncrBy("aaa", "ff", 10));
+      
+      assertTrue( cl.topkList("aaa").stream().allMatch( s -> Arrays.asList("bb", "cc", "ff").contains(s) || s == null));
     }
 
 }

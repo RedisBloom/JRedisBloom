@@ -1,15 +1,20 @@
+[![license](https://img.shields.io/github/license/RedisBloom/JReBloom.svg)](https://github.com/RedisBloom/JReBloom)
+[![CircleCI](https://circleci.com/gh/RedisBloom/JReBloom/tree/master.svg?style=svg)](https://circleci.com/gh/RedisBloom/JReBloom/tree/master)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom)
+[![GitHub issues](https://img.shields.io/github/release/RedisBloom/JReBloom.svg)](https://github.com/RedisBloom/JReBloom/releases/latest)
+[![Javadocs](https://www.javadoc.io/badge/com.redislabs/jrebloom.svg)](https://www.javadoc.io/doc/com.redislabs/jrebloom)
+[![Codecov](https://codecov.io/gh/RedisBloom/JReBloom/branch/master/graph/badge.svg)](https://codecov.io/gh/RedisBloom/JReBloom)
 
 # JReBloom
 
-A Java Client Library for [ReBloom](https://rebloom.io)
+A Java Client Library for [RedisBloom](https://redisbloom.io)
 
 ## Overview 
 
-This project contains a Java library abstracting the API of the ReBloom Redis module, that implements a high
+This project contains a Java library abstracting the API of the RedisBloom Redis module, that implements a high
 performance bloom filter with an easy-to-use API
  
-See [http://rebloom.io](http://rebloom.io) for installation instructions of the module.
+See [http://redisbloom.io](http://redisbloom.io) for installation instructions of the module.
 
 
 ### Official Releases
@@ -19,7 +24,7 @@ See [http://rebloom.io](http://rebloom.io) for installation instructions of the 
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jrebloom</artifactId>
-      <version>1.0.1</version>
+      <version>1.2.0</version>
     </dependency>
   </dependencies>
 ```
@@ -41,7 +46,7 @@ and
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jrebloom</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 ```

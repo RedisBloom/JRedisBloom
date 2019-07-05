@@ -5,13 +5,13 @@ import junit.framework.TestCase;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import redis.clients.jedis.ClusterReset;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.HashSet;
@@ -26,14 +26,15 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author TommyYang on 2018/12/17
  */
+@Ignore
 public class ClusterClientTest {
 
 
     private ClusterClient ccl = null;
 
-    private static HostAndPort nodeInfo1 = new HostAndPort("127.0.0.1", 7379);
-    private static HostAndPort nodeInfo2 = new HostAndPort("127.0.0.1", 7380);
-    private static HostAndPort nodeInfo3 = new HostAndPort("127.0.0.1", 7381);
+    private final static HostAndPort nodeInfo1 = new HostAndPort("127.0.0.1", 7379);
+    private final static HostAndPort nodeInfo2 = new HostAndPort("127.0.0.1", 7380);
+    private final static HostAndPort nodeInfo3 = new HostAndPort("127.0.0.1", 7381);
     private static Jedis node1;
     private static Jedis node2;
     private static Jedis node3;
