@@ -260,8 +260,8 @@ public class Client implements Closeable {
   *
   * Adds an item to the filter
   * @param key The key of the filter
-  * @param item The item to to increment
-  * @return list of items dropped from the list.
+  * @param item The item to increment
+  * @return item dropped from the list.
   */
  public String topkIncrBy(String key, String item, long increment) {
    try (Jedis conn = _conn()) {
