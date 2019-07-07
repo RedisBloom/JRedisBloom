@@ -107,16 +107,16 @@ public class ClusterClient extends JedisCluster {
      * Note that if a filter is not reserved, a new one is created when {@link #add(String, byte[])}
      * is called.
      */
-    public void createFilter(String name, long initCapacity, double errorRate) {
-        (new JedisClusterCommand<Void>(this.connectionHandler, this.maxAttempts) {
-            public Void execute(Jedis connection) {
+    public boolean createFilter(String name, long initCapacity, double errorRate) {
+        return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
+            public Boolean execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 conn.sendCommand(Command.RESERVE, name, errorRate + "", initCapacity + "");
                 String resp = conn.getStatusCodeReply();
                 if (!resp.equals("OK")){
-                    throw new JedisException(resp);
+                    return false;
                 }
-                return null;
+                return true;
             }
         }).run(name);
     }
