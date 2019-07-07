@@ -104,6 +104,8 @@ public class ClusterClient extends JedisCluster {
      * @param initCapacity Optimize for this many items
      * @param errorRate The desired rate of false positives
      *
+     * @return true if the filter create success, false if the filter create error.
+     *
      * Note that if a filter is not reserved, a new one is created when {@link #add(String, byte[])}
      * is called.
      */
