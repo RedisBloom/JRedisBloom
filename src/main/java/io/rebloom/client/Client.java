@@ -30,7 +30,7 @@ public class Client implements Closeable {
     System.arraycopy(args, 0, fullArgs, 1, args.length);
     return sendCommand(conn, command, fullArgs);
   }
-  
+
   private Connection sendCommand(Jedis conn, ProtocolCommand command, String ...args) {
     Connection client = conn.getClient();
     client.sendCommand(command, args);
@@ -215,10 +215,10 @@ public class Client implements Closeable {
           return conn.del(name) != 0;
       }
   }
-  
+
   /**
    * TOPK.RESERVE key topk width depth decay
-   * 
+   *
    * Reserve a topk filter.
    * @param key The key of the filter
    * @param topk
@@ -231,7 +231,7 @@ public class Client implements Closeable {
    */
   public void topkCreateFilter(String key, long topk, long width, long depth, double decay) {
     try (Jedis conn = _conn()) {
-      String rep = sendCommand(conn, TopKCommand.RESERVE,  SafeEncoder.encode(key), Protocol.toByteArray(topk), 
+      String rep = sendCommand(conn, TopKCommand.RESERVE,  SafeEncoder.encode(key), Protocol.toByteArray(topk),
           Protocol.toByteArray(width), Protocol.toByteArray(depth),Protocol.toByteArray(decay))
           .getStatusCodeReply();
 
@@ -240,10 +240,10 @@ public class Client implements Closeable {
       }
     }
   }
-  
+
  /**
   * TOPK.ADD key item [item ...]
-  * 
+  *
   * Adds an item to the filter
   * @param key The key of the filter
   * @param items The items to add to the filter
@@ -254,14 +254,14 @@ public class Client implements Closeable {
      return sendCommand(conn, key, TopKCommand.ADD, items).getMultiBulkReply();
    }
  }
- 
+
  /**
   * TOPK.INCRBY key item increment [item increment ...]
-  * 
+  *
   * Adds an item to the filter
   * @param key The key of the filter
-  * @param item The item to to increment
-  * @return list of items dropped from the list.
+  * @param item The item to increment
+  * @return item dropped from the list.
   */
  public String topkIncrBy(String key, String item, long increment) {
    try (Jedis conn = _conn()) {
@@ -269,12 +269,12 @@ public class Client implements Closeable {
          .getMultiBulkReply().get(0);
    }
  }
- 
+
  /**
   * TOPK.QUERY key item [item ...]
-  * 
+  *
   * Checks whether an item is one of Top-K items.
-  * 
+  *
   * @param key The key of the filter
   * @param items The items to check in the list
   * @return list of indicator for each item requested
@@ -287,12 +287,12 @@ public class Client implements Closeable {
          .collect(Collectors.toList());
    }
  }
- 
+
  /**
   * TOPK.COUNT key item [item ...]
-  * 
+  *
   * Returns count for an item.
-  * 
+  *
   * @param key The key of the filter
   * @param items The items to check in the list
   * @return list of counters per item.
@@ -303,12 +303,12 @@ public class Client implements Closeable {
          .getIntegerMultiBulkReply();
    }
  }
- 
+
  /**
   * TOPK.LIST key
-  * 
+  *
   * Return full list of items in Top K list.
-  * 
+  *
   * @param key The key of the filter
   * @return list of items in the list.
   */
