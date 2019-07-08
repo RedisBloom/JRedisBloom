@@ -114,11 +114,7 @@ public class ClusterClient extends JedisCluster {
             public Boolean execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 conn.sendCommand(Command.RESERVE, name, errorRate + "", initCapacity + "");
-                String resp = conn.getStatusCodeReply();
-                if (!resp.equals("OK")){
-                    return false;
-                }
-                return true;
+                return conn.getStatusCodeReply().equals("OK");
             }
         }).run(name);
     }
