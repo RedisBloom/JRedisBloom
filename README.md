@@ -5,7 +5,7 @@
 [![Javadocs](https://www.javadoc.io/badge/com.redislabs/jrebloom.svg)](https://www.javadoc.io/doc/com.redislabs/jrebloom)
 [![Codecov](https://codecov.io/gh/RedisBloom/JReBloom/branch/master/graph/badge.svg)](https://codecov.io/gh/RedisBloom/JReBloom)
 
-# JReBloom
+# JRedisBloom
 
 A Java Client Library for [RedisBloom](https://redisbloom.io)
 
