@@ -8,6 +8,12 @@ jobs:
     docker:
       - image: circleci/openjdk:8u171-jdk
       - image: redislabs/rebloom:edge
+      - image: redislabs/rebloom:edge
+        command: ['--port', '7379', '--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node1.conf']
+      - image: redislabs/rebloom:edge
+        command: ['--port', '7380', '--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node2.conf']
+      - image: redislabs/rebloom:edge
+        command: ['--port', '7381', '--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node3.conf']
 
     working_directory: ~/repo
 
