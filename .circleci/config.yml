@@ -9,14 +9,11 @@ jobs:
       - image: circleci/openjdk:8u171-jdk
       - image: redislabs/rebloom:edge
       - image: redislabs/redistimeseries:edge
-        command: ['--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node1.conf']
-        port: 7379:6379
+        command: ['--port', '7379', '--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node1.conf']
       - image: redislabs/redistimeseries:edge
-        command: ['--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node2.conf']
-        port: 7380:6379
+        command: ['--port', '7380', '--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node2.conf']
       - image: redislabs/redistimeseries:edge
-        command: ['--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node3.conf']
-        port: 7381:6379
+        command: ['--port', '7381', '--loadmodule', '/usr/lib/redis/modules/redisbloom.so', '--cluster-enabled', 'yes', '--cluster-config-file /tmp/redis_cluster_node3.conf']
 
     working_directory: ~/repo
 
