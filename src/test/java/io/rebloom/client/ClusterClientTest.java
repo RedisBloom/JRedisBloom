@@ -24,7 +24,6 @@ import static junit.framework.TestCase.*;
 /**
  * @author TommyYang on 2018/12/17
  */
-@Ignore
 public class ClusterClientTest {
 
 
