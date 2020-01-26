@@ -20,29 +20,6 @@ import java.util.stream.Collectors;
 public class Client implements Closeable {
   private final Pool<Jedis> pool;
   
-  Jedis _conn() {
-    return pool.getResource();
-  }
-
-  private Connection sendCommand(Jedis conn, String key, ProtocolCommand command, String ...args) {
-    String[] fullArgs = new String[args.length + 1];
-    fullArgs[0] = key;
-    System.arraycopy(args, 0, fullArgs, 1, args.length);
-    return sendCommand(conn, command, fullArgs);
-  }
-
-  private Connection sendCommand(Jedis conn, ProtocolCommand command, String ...args) {
-    Connection client = conn.getClient();
-    client.sendCommand(command, args);
-    return client;
-  }
-
-  private Connection sendCommand(Jedis conn, ProtocolCommand command, byte[]... args) {
-    Connection client = conn.getClient();
-    client.sendCommand(command, args);
-    return client;
-  }
-
   /**
    * Create a new client to ReBloom
    * @param pool Jedis connection pool to be used 
@@ -94,8 +71,7 @@ public class Client implements Closeable {
    */
   public void createFilter(String name, long initCapacity, double errorRate) {
     try (Jedis conn = _conn()) {
-      String rep = sendCommand(conn, Command.RESERVE, name, Double.toString(errorRate), Long.toString(initCapacity)).getStatusCodeReply();
-
+      String rep = sendCommand(conn, Command.RESERVE, SafeEncoder.encode(name), Protocol.toByteArray(errorRate), Protocol.toByteArray(initCapacity)).getStatusCodeReply();
       if (!rep.equals("OK")) {
         throw new JedisException(rep);
       }
@@ -110,7 +86,7 @@ public class Client implements Closeable {
    */
   public boolean add(String name, String value) {
     try (Jedis conn = _conn()) {
-      return sendCommand(conn, Command.ADD, name, value).getIntegerReply() != 0;
+      return sendCommand(conn, Command.ADD, SafeEncoder.encode(name), SafeEncoder.encode(value)).getIntegerReply() != 0;
     }
   }
 
@@ -122,24 +98,20 @@ public class Client implements Closeable {
    */
   public boolean add(String name, byte[] value) {
     try (Jedis conn = _conn()) {
-      return sendCommand(conn, Command.ADD, name.getBytes(), value).getIntegerReply() != 0;
+      return sendCommand(conn, Command.ADD, SafeEncoder.encode(name), value).getIntegerReply() != 0;
     }
   }
 
   @SafeVarargs
-  private final <T> boolean[] sendMultiCommand(Command cmd, T name, T... value) {
-    ArrayList<T> arr = new ArrayList<>();
-    arr.add(name);
-    arr.addAll(Arrays.asList(value));
+  private final boolean[] sendMultiCommand(Command cmd, byte[] name, byte[]... values) {
+    byte[][] args = new byte[values.length + 1][];
+    args[0] = name;
+    System.arraycopy(values, 0, args, 1, values.length);
     List<Long> reps;
     try (Jedis conn = _conn()) {
-      if (name instanceof String) {
-        reps = sendCommand(conn, cmd, (String[])arr.toArray((String[])value)).getIntegerMultiBulkReply();
-      } else {
-        reps = sendCommand(conn, cmd, (byte[][])arr.toArray((byte[][])value)).getIntegerMultiBulkReply();
-      }
+      reps = sendCommand(conn, cmd, args).getIntegerMultiBulkReply();
     }
-    boolean[] ret = new boolean[value.length];    
+    boolean[] ret = new boolean[values.length];    
     for (int i = 0; i < reps.size(); i++) {
       ret[i] = reps.get(i) != 0;
     }
@@ -160,11 +132,11 @@ public class Client implements Closeable {
    * @see #add(String, String)
    */
   public boolean[] addMulti(String name, byte[] ...values) {
-    return sendMultiCommand(Command.MADD, name.getBytes(), values);
+    return sendMultiCommand(Command.MADD, SafeEncoder.encode(name), values);
   }
 
   public boolean[] addMulti(String name, String ...values) {
-    return sendMultiCommand(Command.MADD, name, values);
+    return sendMultiCommand(Command.MADD, SafeEncoder.encode(name), SafeEncoder.encodeMany(values));
   }
 
   /**
@@ -175,7 +147,7 @@ public class Client implements Closeable {
    */
   public boolean exists(String name, String value) {
     try (Jedis conn = _conn()) {
-      return sendCommand(conn, Command.EXISTS, name, value).getIntegerReply() != 0;
+      return sendCommand(conn, Command.EXISTS, SafeEncoder.encode(name), SafeEncoder.encode(value)).getIntegerReply() != 0;
     }
   }
 
@@ -187,7 +159,7 @@ public class Client implements Closeable {
    */
   public boolean exists(String name, byte[] value) {
     try (Jedis conn = _conn()) {
-      return sendCommand(conn, Command.EXISTS, name.getBytes(), value).getIntegerReply() != 0;
+      return sendCommand(conn, Command.EXISTS, SafeEncoder.encode(name), value).getIntegerReply() != 0;
     }
   }
 
@@ -198,11 +170,11 @@ public class Client implements Closeable {
    * @return An array of booleans. A true value means the corresponding value may exist, false means it does not exist
    */
   public boolean[] existsMulti(String name, byte[] ...values) {
-    return sendMultiCommand(Command.MEXISTS, name.getBytes(), values);
+    return sendMultiCommand(Command.MEXISTS, SafeEncoder.encode(name), values);
   }
 
   public boolean[] existsMulti(String name, String ...values) {
-    return sendMultiCommand(Command.MEXISTS, name, values);
+    return sendMultiCommand(Command.MEXISTS, SafeEncoder.encode(name), SafeEncoder.encodeMany(values));
   }
 
   /**
@@ -314,7 +286,7 @@ public class Client implements Closeable {
   */
  public List<String> topkList(String key) {
    try (Jedis conn = _conn()) {
-     return sendCommand(conn, TopKCommand.LIST, key)
+     return sendCommand(conn, TopKCommand.LIST, SafeEncoder.encode(key))
          .getMultiBulkReply();
    }
  }
@@ -324,4 +296,20 @@ public class Client implements Closeable {
     this.pool.close();
   }
 
+  Jedis _conn() {
+    return pool.getResource();
+  }
+
+  private Connection sendCommand(Jedis conn, String key, ProtocolCommand command, String ...args) {
+    byte[][] fullArgs = new byte[args.length + 1][];
+    fullArgs[0] = SafeEncoder.encode(key);
+    System.arraycopy( SafeEncoder.encodeMany(args), 0, fullArgs, 1, args.length);
+    return sendCommand(conn, command, fullArgs);
+  }
+
+  private Connection sendCommand(Jedis conn, ProtocolCommand command, byte[]... args) {
+    Connection client = conn.getClient();
+    client.sendCommand(command, args);
+    return client;
+  }
 }
