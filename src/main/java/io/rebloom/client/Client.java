@@ -102,6 +102,24 @@ public class Client implements Closeable {
     }
   }
 
+  /**
+   * add one or more items to the bloom filter, by default creating it if it does not yet exist
+   *
+   * @param name The name of the filter
+   * @param options {@link io.rebloom.client.InsertOptions}
+   * @param items items to add to the filter
+   * @return
+   */
+  public boolean[] insert(String name, InsertOptions options, String... items) {
+    final List<byte[]> args = new ArrayList<>();
+    args.addAll(options.getOptions());
+    args.add(Keyword.ITEMS.raw);
+    for (String item : items) {
+      args.add(SafeEncoder.encode(item));
+    }
+    return sendMultiCommand(Command.INSERT, SafeEncoder.encode(name), args.toArray(new byte[args.size()][]));
+  }
+
   @SafeVarargs
   private final boolean[] sendMultiCommand(Command cmd, byte[] name, byte[]... values) {
     byte[][] args = new byte[values.length + 1][];
