@@ -8,7 +8,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/RedisBloom/JRedisBloom/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/RedisBloom/JRedisBloom?targetFile=pom.xml)
 
 # JRedisBloom
-[![Mailing List](https://img.shields.io/badge/Mailing%20List-RedisBloom-blue)](https://groups.google.com/forum/#!forum/redisbloom)
+[![Forum](https://img.shields.io/badge/Forum-RedisBloom-blue)](https://forum.redislabs.com/c/modules/redisbloom)
 [![Gitter](https://badges.gitter.im/RedisLabs/RedisBloom.svg)](https://gitter.im/RedisLabs/RedisBloom?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 A Java Client Library for [RedisBloom](https://redisbloom.io)
@@ -111,6 +111,3 @@ cclient.exists("simpleBloom", "Farnsworth"); // False
 ```
 
 all method of ClusterClient is same to Client.
-
-
-
