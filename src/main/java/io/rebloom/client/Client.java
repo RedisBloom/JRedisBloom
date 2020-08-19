@@ -85,9 +85,7 @@ public class Client implements Closeable {
    * @return true if the item was not previously in the filter.
    */
   public boolean add(String name, String value) {
-    try (Jedis conn = _conn()) {
-      return sendCommand(conn, Command.ADD, SafeEncoder.encode(name), SafeEncoder.encode(value)).getIntegerReply() != 0;
-    }
+    return add(name, SafeEncoder.encode(value));
   }
 
   /**
@@ -147,14 +145,25 @@ public class Client implements Closeable {
    * filter or not. A true value means the item did not previously exist, whereas a
    * false value means it may have previously existed.
    *
-   * @see #add(String, String)
+   * @see #add(String, byte[])
    */
   public boolean[] addMulti(String name, byte[] ...values) {
     return sendMultiCommand(Command.MADD, SafeEncoder.encode(name), values);
   }
 
+  /**
+   * Add one or more items to a filter
+   * @param name Name of the filter
+   * @param values values to add to the filter.
+   * @return An array of booleans of the same length as the number of values.
+   * Each boolean values indicates whether the corresponding element was previously in the
+   * filter or not. A true value means the item did not previously exist, whereas a
+   * false value means it may have previously existed.
+   *
+   * @see #add(String, String)
+   */
   public boolean[] addMulti(String name, String ...values) {
-    return sendMultiCommand(Command.MADD, SafeEncoder.encode(name), SafeEncoder.encodeMany(values));
+    return addMulti(name, SafeEncoder.encodeMany(values));
   }
 
   /**
@@ -164,9 +173,7 @@ public class Client implements Closeable {
    * @return true if the item may exist in the filter, false if the item does not exist in the filter
    */
   public boolean exists(String name, String value) {
-    try (Jedis conn = _conn()) {
-      return sendCommand(conn, Command.EXISTS, SafeEncoder.encode(name), SafeEncoder.encode(value)).getIntegerReply() != 0;
-    }
+    return exists(name, SafeEncoder.encode(value));
   }
 
   /**

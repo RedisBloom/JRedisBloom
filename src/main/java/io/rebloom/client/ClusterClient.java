@@ -126,13 +126,7 @@ public class ClusterClient extends JedisCluster {
      * @return true if the item was not previously in the filter.
      */
     public boolean add(String name, String value) {
-        return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
-            public Boolean execute(Jedis connection) {
-                Connection conn = connection.getClient();
-                conn.sendCommand(Command.ADD, name, value);
-                return conn.getIntegerReply() != 0;
-            }
-        }).run(name);
+      return add(name, SafeEncoder.encode(value));
     }
 
     /**
@@ -181,13 +175,7 @@ public class ClusterClient extends JedisCluster {
      * @return true if the item may exist in the filter, false if the item does not exist in the filter
      */
     public boolean exists(String name, String value) {
-        return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
-            public Boolean execute(Jedis connection) {
-                Connection conn = connection.getClient();
-                conn.sendCommand(Command.EXISTS, name, value);
-                return conn.getIntegerReply() != 0;
-            }
-        }).run(name);
+        return exists(name, SafeEncoder.encode(value));
     }
 
     /**
