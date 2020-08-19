@@ -113,7 +113,7 @@ public class Client implements Closeable {
   public boolean[] insert(String name, InsertOptions options, String... items) {
     final List<byte[]> args = new ArrayList<>();
     args.addAll(options.getOptions());
-    args.add(Keyword.ITEMS.raw);
+    args.add(Keywords.ITEMS.getRaw());
     for (String item : items) {
       args.add(SafeEncoder.encode(item));
     }

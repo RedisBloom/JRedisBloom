@@ -165,7 +165,7 @@ public class ClusterClient extends JedisCluster {
                 Connection conn = connection.getClient();
                 final List<byte[]> args = new ArrayList<>();
                 args.addAll(options.getOptions());
-                args.add(Keyword.ITEMS.getRaw());
+                args.add(Keywords.ITEMS.getRaw());
                 for (String item : items) {
                     args.add(SafeEncoder.encode(item));
                 }
