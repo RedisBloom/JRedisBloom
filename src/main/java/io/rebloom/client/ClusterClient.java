@@ -165,7 +165,7 @@ public class ClusterClient extends JedisCluster {
                 Connection conn = connection.getClient();
                 final List<byte[]> args = new ArrayList<>();
                 args.addAll(options.getOptions());
-                args.add(Keyword.ITEMS.raw);
+                args.add(Keyword.ITEMS.getRaw());
                 for (String item : items) {
                     args.add(SafeEncoder.encode(item));
                 }
@@ -410,10 +410,10 @@ public class ClusterClient extends JedisCluster {
         arr.addAll(Arrays.asList(value));
         List<Long> reps;
         if (name instanceof String) {
-            conn.sendCommand(cmd, (String[]) arr.toArray((String[]) value));
+            conn.sendCommand(cmd, arr.toArray((String[]) value));
             reps = conn.getIntegerMultiBulkReply();
         } else {
-            conn.sendCommand(cmd, (byte[][]) arr.toArray((byte[][]) value));
+            conn.sendCommand(cmd, arr.toArray((byte[][]) value));
             reps = conn.getIntegerMultiBulkReply();
         }
         boolean[] ret = new boolean[value.length];
