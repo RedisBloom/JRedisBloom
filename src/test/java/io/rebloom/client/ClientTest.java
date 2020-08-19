@@ -2,9 +2,11 @@ package io.rebloom.client;
 
 import org.junit.Before;
 import org.junit.Test;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
 
 import static junit.framework.TestCase.*;
+import static org.junit.Assert.assertThrows;
 
 import java.util.Arrays;
 
@@ -150,4 +152,16 @@ public class ClientTest {
       assertTrue( cl.topkList("aaa").stream().allMatch( s -> Arrays.asList("bb", "cc", "ff").contains(s) || s == null));
     }
 
+    @Test
+    public void testInsert() {
+        cl.insert("b1", new InsertOptions().capacity(1L), "1");
+        assertTrue(cl.exists("b1", "1"));
+
+        // returning an error if the filter does not already exist
+        Exception exception = assertThrows(JedisDataException.class, () -> cl.insert("b2", new InsertOptions().nocreate(), "1"));
+        assertTrue("ERR not found".equals(exception.getMessage()));
+
+        cl.insert("b3", new InsertOptions().capacity(1L).error(0.0001), "2");
+        assertTrue(cl.exists("b3", "2"));
+    }
 }
