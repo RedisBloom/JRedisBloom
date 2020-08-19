@@ -9,7 +9,7 @@ import java.util.List;
 import static io.rebloom.client.Keyword.*;
 
 public class InsertOptions {
-    private List<byte[]> options = new ArrayList<byte[]>();
+    private final List<byte[]> options = new ArrayList<>();
 
     /**
      * If specified, should be followed by the desired capacity for the filter to be created
