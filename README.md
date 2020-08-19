@@ -28,7 +28,7 @@ See [http://redisbloom.io](http://redisbloom.io) for installation instructions o
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jrebloom</artifactId>
-      <version>1.2.0</version>
+      <version>2.0.0</version>
     </dependency>
   </dependencies>
 ```
@@ -50,7 +50,7 @@ and
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jrebloom</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
+      <version>2.1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 ```
