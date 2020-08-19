@@ -126,13 +126,7 @@ public class ClusterClient extends JedisCluster {
      * @return true if the item was not previously in the filter.
      */
     public boolean add(String name, String value) {
-        return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
-            public Boolean execute(Jedis connection) {
-                Connection conn = connection.getClient();
-                conn.sendCommand(Command.ADD, name, value);
-                return conn.getIntegerReply() != 0;
-            }
-        }).run(name);
+      return add(name, SafeEncoder.encode(value));
     }
 
     /**
@@ -165,7 +159,7 @@ public class ClusterClient extends JedisCluster {
                 Connection conn = connection.getClient();
                 final List<byte[]> args = new ArrayList<>();
                 args.addAll(options.getOptions());
-                args.add(Keyword.ITEMS.raw);
+                args.add(Keywords.ITEMS.getRaw());
                 for (String item : items) {
                     args.add(SafeEncoder.encode(item));
                 }
@@ -181,13 +175,7 @@ public class ClusterClient extends JedisCluster {
      * @return true if the item may exist in the filter, false if the item does not exist in the filter
      */
     public boolean exists(String name, String value) {
-        return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
-            public Boolean execute(Jedis connection) {
-                Connection conn = connection.getClient();
-                conn.sendCommand(Command.EXISTS, name, value);
-                return conn.getIntegerReply() != 0;
-            }
-        }).run(name);
+        return exists(name, SafeEncoder.encode(value));
     }
 
     /**
@@ -410,10 +398,10 @@ public class ClusterClient extends JedisCluster {
         arr.addAll(Arrays.asList(value));
         List<Long> reps;
         if (name instanceof String) {
-            conn.sendCommand(cmd, (String[]) arr.toArray((String[]) value));
+            conn.sendCommand(cmd, arr.toArray((String[]) value));
             reps = conn.getIntegerMultiBulkReply();
         } else {
-            conn.sendCommand(cmd, (byte[][]) arr.toArray((byte[][]) value));
+            conn.sendCommand(cmd, arr.toArray((byte[][]) value));
             reps = conn.getIntegerMultiBulkReply();
         }
         boolean[] ret = new boolean[value.length];

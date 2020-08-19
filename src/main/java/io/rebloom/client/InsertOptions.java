@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static io.rebloom.client.Keyword.*;
+import static io.rebloom.client.Keywords.*;
 
 public class InsertOptions {
     private final List<byte[]> options = new ArrayList<>();
@@ -17,7 +17,7 @@ public class InsertOptions {
      * @return
      */
     public InsertOptions capacity(final long capacity) {
-        options.add(CAPACITY.raw);
+        options.add(CAPACITY.getRaw());
         options.add(Protocol.toByteArray(capacity));
         return this;
     }
@@ -28,7 +28,7 @@ public class InsertOptions {
      * @return
      */
     public InsertOptions error(final double errorRate) {
-        options.add(ERROR.raw);
+        options.add(ERROR.getRaw());
         options.add(Protocol.toByteArray(errorRate));
         return this;
     }
@@ -39,7 +39,7 @@ public class InsertOptions {
      * @return
      */
     public InsertOptions nocreate() {
-        options.add(NOCREATE.raw);
+        options.add(NOCREATE.getRaw());
         return this;
     }
 
