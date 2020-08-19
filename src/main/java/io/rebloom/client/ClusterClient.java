@@ -151,6 +151,28 @@ public class ClusterClient extends JedisCluster {
         }).run(name);
     }
 
+    /**
+     * add one or more items to the bloom filter, by default creating it if it does not yet exist
+     *
+     * @param name The name of the filter
+     * @param options {@link io.rebloom.client.InsertOptions}
+     * @param items items to add to the filter
+     * @return
+     */
+    public boolean[] insert(String name, InsertOptions options, String... items) {
+        return (new JedisClusterCommand<boolean[]>(this.connectionHandler, this.maxAttempts) {
+            public boolean[] execute(Jedis connection) {
+                Connection conn = connection.getClient();
+                final List<byte[]> args = new ArrayList<>();
+                args.addAll(options.getOptions());
+                args.add(Keyword.ITEMS.raw);
+                for (String item : items) {
+                    args.add(SafeEncoder.encode(item));
+                }
+                return sendMultiCommand(conn, Command.INSERT, name.getBytes(), args.toArray(new byte[args.size()][]));
+            }
+        }).run(name);
+    }
 
     /**
      * Check if an item exists in the filter
