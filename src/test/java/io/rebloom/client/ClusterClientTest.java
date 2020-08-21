@@ -17,6 +17,7 @@ import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static junit.framework.TestCase.*;
@@ -226,5 +227,16 @@ public class ClusterClientTest {
 
         ccl.insert("b3", new InsertOptions().capacity(1L).error(0.0001), "2");
         assertTrue(ccl.exists("b3", "2"));
+    }
+
+    @Test
+    public void testInfo() {
+        ccl.insert("test_info", new InsertOptions().capacity(1L), "1");
+        Map<String, Object> info = ccl.info("test_info");
+        assertEquals("1", info.get("Number of items inserted").toString());
+
+        // returning an error if the filter does not already exist
+        Exception exception = assertThrows(JedisDataException.class, () -> ccl.info("not_exist"));
+        assertTrue("ERR not found".equals(exception.getMessage()));
     }
 }

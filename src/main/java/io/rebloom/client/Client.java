@@ -214,6 +214,27 @@ public class Client implements Closeable {
   }
 
   /**
+   * Get information about the filter
+   * @param name
+   * @return Return information
+   */
+  public Map<String, Object> info(String name) {
+    try (Jedis conn = _conn()) {
+      List<Object> values = sendCommand(conn, Command.INFO, SafeEncoder.encode(name)).getObjectMultiBulkReply();
+
+      Map<String, Object> infoMap = new HashMap<>(values.size() / 2);
+      for (int i = 0; i < values.size(); i += 2) {
+        Object val = values.get(i + 1);
+        if (val instanceof byte[]) {
+          val = SafeEncoder.encode((byte[]) val);
+        }
+        infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
+      }
+      return infoMap;
+    }
+  }
+
+  /**
    * TOPK.RESERVE key topk width depth decay
    *
    * Reserve a topk filter.
