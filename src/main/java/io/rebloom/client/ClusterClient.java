@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * @author TommyYang on 2018/12/17
@@ -258,6 +260,31 @@ public class ClusterClient extends JedisCluster {
                 Connection conn = connection.getClient();
                 ((Client) conn).del(name);
                 return conn.getIntegerReply() != 0;
+            }
+        }).run(name);
+    }
+
+    /**
+     * Get information about the filter
+     * @param name
+     * @return Return information
+     */
+    public Map<String, Object> info(String name) {
+        return (new JedisClusterCommand<Map<String, Object>>(this.connectionHandler, this.maxAttempts) {
+            public Map<String, Object> execute(Jedis connection) {
+                Connection conn = connection.getClient();
+                conn.sendCommand(Command.INFO, name.getBytes());
+                List<Object> values = conn.getObjectMultiBulkReply();
+
+                Map<String, Object> infoMap = new HashMap<>(values.size() / 2);
+                for (int i = 0; i < values.size(); i += 2) {
+                    Object val = values.get(i + 1);
+                    if (val instanceof byte[]) {
+                        val = SafeEncoder.encode((byte[]) val);
+                    }
+                    infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
+                }
+                return infoMap;
             }
         }).run(name);
     }

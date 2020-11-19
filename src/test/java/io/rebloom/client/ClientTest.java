@@ -9,6 +9,7 @@ import static junit.framework.TestCase.*;
 import static org.junit.Assert.assertThrows;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * @author Mark Nunberg
@@ -163,5 +164,16 @@ public class ClientTest {
 
         cl.insert("b3", new InsertOptions().capacity(1L).error(0.0001), "2");
         assertTrue(cl.exists("b3", "2"));
+    }
+
+    @Test
+    public void testInfo() {
+        cl.insert("test_info", new InsertOptions().capacity(1L), "1");
+        Map<String, Object> info = cl.info("test_info");
+        assertEquals("1", info.get("Number of items inserted").toString());
+
+        // returning an error if the filter does not already exist
+        Exception exception = assertThrows(JedisDataException.class, () -> cl.info("not_exist"));
+        assertTrue("ERR not found".equals(exception.getMessage()));
     }
 }
