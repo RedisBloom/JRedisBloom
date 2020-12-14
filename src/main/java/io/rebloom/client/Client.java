@@ -13,11 +13,15 @@ import redis.clients.jedis.util.SafeEncoder;
 import java.io.Closeable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import io.rebloom.client.cms.CMS;
+import io.rebloom.client.cms.CMSCommand;
 
 /**
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
  */
-public class Client implements Closeable {
+public class Client implements CMS, Closeable {
   private final Pool<Jedis> pool;
   
   /**
@@ -334,6 +338,132 @@ public class Client implements Closeable {
    try (Jedis conn = _conn()) {
      return sendCommand(conn, TopKCommand.LIST, SafeEncoder.encode(key))
          .getMultiBulkReply();
+   }
+ }
+ 
+ //
+ // Count-Min-Sketch Implementation
+ //
+
+ @Override
+ public void cmsInitByDim(String key, long width, long depth) {
+   try (Jedis conn = _conn()) {
+     String rep = sendCommand(conn, CMSCommand.INITBYDIM, //
+         SafeEncoder.encode(key), //
+         Protocol.toByteArray(width), //
+         Protocol.toByteArray(depth)).getStatusCodeReply();
+
+     if (!rep.equals("OK")) {
+       throw new JedisException(rep);
+     }
+   }
+ }
+
+ @Override
+ public void cmsInitByProb(String key, double error, double probability) {
+   try (Jedis conn = _conn()) {
+     String rep = sendCommand(conn, CMSCommand.INITBYPROB, //
+         SafeEncoder.encode(key), //
+         Protocol.toByteArray(error), //
+         Protocol.toByteArray(probability)).getStatusCodeReply();
+
+     if (!rep.equals("OK")) {
+       throw new JedisException(rep);
+     }
+   }
+ }
+
+ @Override
+ public Long cmsIncrBy(String key, String item, long increment) {
+   try (Jedis conn = _conn()) {
+     return sendCommand(conn, CMSCommand.INCRBY, //
+         SafeEncoder.encode(key), //
+         SafeEncoder.encode(item), //
+         Protocol.toByteArray(increment)).getIntegerMultiBulkReply().get(0);
+   }
+ }
+
+ @Override
+ public List<Long> cmsIncrBy(String key, Map<String, Long> itemIncrements) {
+   try (Jedis conn = _conn()) {
+     List<byte[]> mapFlatten = itemIncrements//
+         .entrySet() //
+         .stream() //
+         .flatMap(e -> Stream.of(//
+             SafeEncoder.encode(e.getKey()), //
+             Protocol.toByteArray(e.getValue())))//
+         .collect(Collectors.toList());
+
+     byte[][] fullArgs = new byte[mapFlatten.size() + 1][];
+     fullArgs[0] = SafeEncoder.encode(key);
+     System.arraycopy(mapFlatten.toArray(), 0, fullArgs, 1, mapFlatten.size());
+
+     return sendCommand(conn, CMSCommand.INCRBY, fullArgs).getIntegerMultiBulkReply();
+   }
+ }
+
+ @Override
+ public List<Long> cmsQuery(String key, String... items) {
+   try (Jedis conn = _conn()) {
+     return sendCommand(conn, key, CMSCommand.QUERY, items).getIntegerMultiBulkReply();
+   }
+ }
+
+ @Override
+ public void cmsMerge(String destKey, String... keys) {
+   try (Jedis conn = _conn()) {
+     byte[][] args = new byte[keys.length + 2][];
+     args[0] = SafeEncoder.encode(destKey);
+     args[1] = Protocol.toByteArray(keys.length);
+     System.arraycopy(SafeEncoder.encodeMany(keys), 0, args, 2, keys.length);
+
+     String rep = sendCommand(conn, CMSCommand.MERGE, args).getStatusCodeReply();
+
+     if (!rep.equals("OK")) {
+       throw new JedisException(rep);
+     }
+   }
+ }
+
+ @Override
+ public void cmsMerge(String destKey, Map<String, Long> keysAndWeights) {
+   try (Jedis conn = _conn()) {
+
+     String[] keys = keysAndWeights.keySet().toArray(new String[0]);
+     String[] weights = keysAndWeights.values().stream().map(l -> l.toString()).collect(Collectors.toList())
+         .toArray(new String[0]);
+
+     byte[][] args = new byte[(keysAndWeights.size() * 2) + 3][];
+
+     args[0] = SafeEncoder.encode(destKey);
+     args[1] = Protocol.toByteArray(keys.length);
+     System.arraycopy(SafeEncoder.encodeMany(keys), 0, args, 2, keys.length);
+     args[keys.length + 2] = SafeEncoder.encode("WEIGHTS");
+     System.arraycopy(SafeEncoder.encodeMany(weights), 0, args, weights.length * 2 + 1, weights.length);
+
+     String rep = sendCommand(conn, CMSCommand.MERGE, args).getStatusCodeReply();
+
+     if (!rep.equals("OK")) {
+       throw new JedisException(rep);
+     }
+   }
+
+ }
+
+ @Override
+ public Map<String, Object> cmsInfo(String key) {
+   try (Jedis conn = _conn()) {
+     List<Object> values = sendCommand(conn, CMSCommand.INFO, SafeEncoder.encode(key)).getObjectMultiBulkReply();
+
+     Map<String, Object> infoMap = new HashMap<>(values.size() / 2);
+     for (int i = 0; i < values.size(); i += 2) {
+       Object val = values.get(i + 1);
+       if (val instanceof byte[]) {
+         val = SafeEncoder.encode((byte[]) val);
+       }
+       infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
+     }
+     return infoMap;
    }
  }
 
