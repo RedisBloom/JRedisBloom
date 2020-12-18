@@ -45,7 +45,7 @@ public interface CMS {
    * @param increment Counter to be increased by this integer
    * @return Count for the item after increment
    */
-  Long cmsIncrBy(String key, String item, long increment);
+  long cmsIncrBy(String key, String item, long increment);
 
   /**
    * CMS.INCRBY Increases the count of one or more item.

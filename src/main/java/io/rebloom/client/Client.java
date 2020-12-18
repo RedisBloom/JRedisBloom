@@ -374,7 +374,7 @@ public class Client implements CMS, Closeable {
  }
 
  @Override
- public Long cmsIncrBy(String key, String item, long increment) {
+ public long cmsIncrBy(String key, String item, long increment) {
    try (Jedis conn = _conn()) {
      return sendCommand(conn, CMSCommand.INCRBY, //
          SafeEncoder.encode(key), //
