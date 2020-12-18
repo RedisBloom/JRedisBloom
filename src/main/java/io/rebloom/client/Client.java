@@ -451,16 +451,13 @@ public class Client implements CMS, Closeable {
  }
 
  @Override
- public Map<String, Object> cmsInfo(String key) {
+ public Map<String, Long> cmsInfo(String key) {
    try (Jedis conn = _conn()) {
      List<Object> values = sendCommand(conn, CMSCommand.INFO, SafeEncoder.encode(key)).getObjectMultiBulkReply();
 
-     Map<String, Object> infoMap = new HashMap<>(values.size() / 2);
+     Map<String, Long> infoMap = new HashMap<>(values.size() / 2);
      for (int i = 0; i < values.size(); i += 2) {
-       Object val = values.get(i + 1);
-       if (val instanceof byte[]) {
-         val = SafeEncoder.encode((byte[]) val);
-       }
+       Long val = (Long) values.get(i + 1);
        infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
      }
      return infoMap;

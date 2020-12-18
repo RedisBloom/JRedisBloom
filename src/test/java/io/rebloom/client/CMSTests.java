@@ -39,19 +39,19 @@ public class CMSTests {
   @Test
   public void testInitByDim() {
     cl.cmsInitByDim("cms1", 16L, 4L);
-    Map<String, Object> info = cl.cmsInfo("cms1");
-    assertEquals(16L, info.get("width"));
-    assertEquals(4L, info.get("depth"));
-    assertEquals(0L, info.get("count"));
+    Map<String, Long> info = cl.cmsInfo("cms1");
+    assertEquals(16L, info.get("width").longValue());
+    assertEquals(4L, info.get("depth").longValue());
+    assertEquals(0L, info.get("count").longValue());
   }
 
   @Test
   public void testInitByProb() {
     cl.cmsInitByProb("cms2", 0.01, 0.01);
-    Map<String, Object> info = cl.cmsInfo("cms2");
-    assertEquals(200L, info.get("width"));
-    assertEquals(7L, info.get("depth"));
-    assertEquals(0L, info.get("count"));
+    Map<String, Long> info = cl.cmsInfo("cms2");
+    assertEquals(200L, info.get("width").longValue());
+    assertEquals(7L, info.get("depth").longValue());
+    assertEquals(0L, info.get("count").longValue());
   }
 
   @Test
@@ -69,10 +69,10 @@ public class CMSTests {
     long resp = cl.cmsIncrBy("cms3", "foo", 5L);
     assertEquals(5L, resp);
 
-    Map<String, Object> info = cl.cmsInfo("cms3");
-    assertEquals(1000L, info.get("width"));
-    assertEquals(5L, info.get("depth"));
-    assertEquals(5L, info.get("count"));
+    Map<String, Long> info = cl.cmsInfo("cms3");
+    assertEquals(1000L, info.get("width").longValue());
+    assertEquals(5L, info.get("depth").longValue());
+    assertEquals(5L, info.get("count").longValue());
   }
 
   @Test
@@ -87,10 +87,10 @@ public class CMSTests {
     List<Long> resp = cl.cmsIncrBy("cms4", itemIncrements);
     assertArrayEquals(new Long[] { 15L, 10L }, resp.toArray(new Long[0]));
 
-    Map<String, Object> info = cl.cmsInfo("cms4");
-    assertEquals(1000L, info.get("width"));
-    assertEquals(5L, info.get("depth"));
-    assertEquals(25L, info.get("count"));
+    Map<String, Long> info = cl.cmsInfo("cms4");
+    assertEquals(1000L, info.get("width").longValue());
+    assertEquals(5L, info.get("depth").longValue());
+    assertEquals(25L, info.get("count").longValue());
   }
 
   @Test

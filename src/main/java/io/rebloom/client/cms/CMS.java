@@ -92,5 +92,5 @@ public interface CMS {
    * @param key The name of the sketch
    * @return A Map with width, depth and total count.
    */
-  Map<String, Object> cmsInfo(String key);
+  Map<String, Long> cmsInfo(String key);
 }
