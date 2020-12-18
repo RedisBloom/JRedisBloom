@@ -619,14 +619,14 @@ public class Client implements Cuckoo, Closeable {
     @Override
     public Map.Entry<Long, byte[]> next() {
       Map.Entry<Long, byte[]> dump = scan(current);
-      current = dump == null ? 0 : dump.getKey();
+      current = dump == null ? 0L : dump.getKey();
       return dump;
     }
 
     private Map.Entry<Long, byte[]> scan(Long iter) {
       Map.Entry<Long, byte[]> dump = client.cfScanDump(key, iter == null ? 0 : iter);
 
-      return dump.getKey() != 0 ? dump : null;
+      return dump.getKey() != 0L ? dump : null;
     }
   }
 
