@@ -41,7 +41,6 @@ public class ClientTest {
       try(Client client = new Client(new JedisPool("localhost", port))){
         refClient = client;
         client.createFilter("createBloom", 100, 0.001);
-        client.createFilter("createBloom", 100, 0.001);
         assertTrue(client.delete("createBloom"));
       }
       assertThrows(JedisException.class, () -> refClient.createFilter("myBloom", 100, 0.001));
