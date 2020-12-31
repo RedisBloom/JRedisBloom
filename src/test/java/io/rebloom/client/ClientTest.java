@@ -2,6 +2,8 @@ package io.rebloom.client;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
 
@@ -25,12 +27,24 @@ public class ClientTest {
         }
     }
 
-    Client cl = null;
+    private Client cl = null;
 
     @Before
     public void clearDb() {
         cl = new Client("localhost", port);
         cl._conn().flushDB();
+    }
+    
+    @Test
+    public void createWithPool() {
+      Client refClient;
+      try(Client client = new Client(new JedisPool("localhost", port))){
+        refClient = client;
+        client.createFilter("createBloom", 100, 0.001);
+        client.createFilter("createBloom", 100, 0.001);
+        assertTrue(client.delete("createBloom"));
+      }
+      assertThrows(JedisException.class, () -> refClient.createFilter("myBloom", 100, 0.001));
     }
 
     @Test
@@ -73,6 +87,7 @@ public class ClientTest {
         assertFalse(cl.exists("newFilter", "bar".getBytes()));
     }
 
+    @Test
     public void testExistsNonExist() {
       assertFalse(cl.exists("nonExist", "foo"));
     }
@@ -160,7 +175,7 @@ public class ClientTest {
 
         // returning an error if the filter does not already exist
         Exception exception = assertThrows(JedisDataException.class, () -> cl.insert("b2", new InsertOptions().nocreate(), "1"));
-        assertTrue("ERR not found".equals(exception.getMessage()));
+        assertEquals("ERR not found", exception.getMessage());
 
         cl.insert("b3", new InsertOptions().capacity(1L).error(0.0001), "2");
         assertTrue(cl.exists("b3", "2"));
@@ -174,6 +189,6 @@ public class ClientTest {
 
         // returning an error if the filter does not already exist
         Exception exception = assertThrows(JedisDataException.class, () -> cl.info("not_exist"));
-        assertTrue("ERR not found".equals(exception.getMessage()));
+        assertEquals("ERR not found", exception.getMessage());
     }
 }
