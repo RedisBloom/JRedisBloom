@@ -140,10 +140,10 @@ public class ClusterClientTest {
         ccl.createFilter("myBloom", 100, 0);
     }
 
-    @Test(expected = JedisException.class)
+    @Test
     public void reserveAlreadyExists() {
         assertTrue(ccl.createFilter("myBloom", 100, 0.1));
-        ccl.createFilter("myBloom", 100, 0.1);
+        assertThrows(JedisException.class, () -> ccl.createFilter("myBloom", 100, 0.1));
     }
 
     @Test
@@ -223,7 +223,7 @@ public class ClusterClientTest {
 
         // returning an error if the filter does not already exist
         Exception exception = assertThrows(JedisDataException.class, () -> ccl.insert("b2", new InsertOptions().nocreate(), "1"));
-        assertTrue("ERR not found".equals(exception.getMessage()));
+        assertEquals("ERR not found", exception.getMessage());
 
         ccl.insert("b3", new InsertOptions().capacity(1L).error(0.0001), "2");
         assertTrue(ccl.exists("b3", "2"));
@@ -237,6 +237,6 @@ public class ClusterClientTest {
 
         // returning an error if the filter does not already exist
         Exception exception = assertThrows(JedisDataException.class, () -> ccl.info("not_exist"));
-        assertTrue("ERR not found".equals(exception.getMessage()));
+        assertEquals("ERR not found", exception.getMessage());
     }
 }
