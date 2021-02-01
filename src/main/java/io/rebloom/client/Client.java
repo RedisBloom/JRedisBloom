@@ -1,5 +1,23 @@
 package io.rebloom.client;
 
+import java.io.Closeable;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import io.rebloom.client.cf.CFInsertOptions;
+import io.rebloom.client.cf.CFReserveOptions;
+import io.rebloom.client.cf.Cuckoo;
+import io.rebloom.client.cf.CuckooCommand;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -10,25 +28,21 @@ import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.Pool;
 import redis.clients.jedis.util.SafeEncoder;
 
-import java.io.Closeable;
-import java.util.*;
-import java.util.stream.Collectors;
-
 /**
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
  */
-public class Client implements Closeable {
+public class Client implements Cuckoo, Closeable {
   private final Pool<Jedis> pool;
-  
+
   /**
    * Create a new client to ReBloom
-   * @param pool Jedis connection pool to be used 
+   * @param pool Jedis connection pool to be used
    */
   public Client(Pool<Jedis> pool){
     this.pool = pool;
   }
- 
-  
+
+
   /**
    * Create a new client to ReBloom
    * @param host the redis host
@@ -127,7 +141,7 @@ public class Client implements Closeable {
     try (Jedis conn = _conn()) {
       reps = sendCommand(conn, cmd, args).getIntegerMultiBulkReply();
     }
-    boolean[] ret = new boolean[values.length];    
+    boolean[] ret = new boolean[values.length];
     for (int i = 0; i < reps.size(); i++) {
       ret[i] = reps.get(i) != 0;
     }
@@ -358,4 +372,262 @@ public class Client implements Closeable {
     client.sendCommand(command, args);
     return client;
   }
+
+  private Connection sendCommand(Jedis conn, ProtocolCommand command, List<byte[]> args) {
+    Connection client = conn.getClient();
+    client.sendCommand(command, args.toArray(new byte[args.size()][]));
+    return client;
+  }
+
+  //
+  // Cuckoo Filter Implementation
+  //
+
+  @Override
+  public void cfCreate(String key, CFReserveOptions options) {
+    try (Jedis conn = _conn()) {
+
+      List<byte[]> fullArgs = new ArrayList<byte[]>();
+      fullArgs.add(SafeEncoder.encode(key));
+      fullArgs.addAll(options.asListOfByteArrays());
+
+      String rep = sendCommand(conn, CuckooCommand.RESERVE, fullArgs).getStatusCodeReply();
+
+      if (!rep.equals("OK")) {
+        throw new JedisException(rep);
+      }
+    }
+  }
+
+  @Override
+  public void cfCreate(String key, long capacity) {
+    try (Jedis conn = _conn()) {
+      String rep = sendCommand(conn, CuckooCommand.RESERVE, //
+          SafeEncoder.encode(key), //
+          Protocol.toByteArray(capacity) //
+      ).getStatusCodeReply();
+
+      if (!rep.equals("OK")) {
+        throw new JedisException(rep);
+      }
+    }
+  }
+
+  @Override
+  public boolean cfAdd(String key, String item) {
+    try (Jedis conn = _conn()) {
+      return sendCommand(conn, CuckooCommand.ADD, //
+          SafeEncoder.encode(key), //
+          SafeEncoder.encode(item) //
+      ).getIntegerReply() == 1;
+    }
+  }
+
+  @Override
+  public boolean cfAddNx(String key, String item) {
+    try (Jedis conn = _conn()) {
+      return sendCommand(conn, CuckooCommand.ADDNX, //
+          SafeEncoder.encode(key), //
+          SafeEncoder.encode(item) //
+      ).getIntegerReply() == 1;
+    }
+  }
+
+  @Override
+  public List<Boolean> cfInsert(String key, String... items) {
+    try (Jedis conn = _conn()) {
+
+      List<byte[]> fullArgs = new ArrayList<byte[]>();
+      fullArgs.add(SafeEncoder.encode(key));
+      fullArgs.add(SafeEncoder.encode("ITEMS"));
+      fullArgs.addAll(Arrays.asList(SafeEncoder.encodeMany(items)));
+
+      return sendCommand(conn, CuckooCommand.INSERT, fullArgs) //
+          .getIntegerMultiBulkReply() //
+          .stream() //
+          .map(s -> s > 0) //
+          .collect(Collectors.toList());
+    }
+  }
+
+  @Override
+  public List<Boolean> cfInsert(String key, CFInsertOptions options, String... items) {
+    try (Jedis conn = _conn()) {
+
+      List<byte[]> fullArgs = new ArrayList<byte[]>();
+      fullArgs.add(SafeEncoder.encode(key));
+      fullArgs.addAll(options.asListOfByteArrays());
+      fullArgs.add(SafeEncoder.encode("ITEMS"));
+      fullArgs.addAll(Arrays.asList(SafeEncoder.encodeMany(items)));
+
+      return sendCommand(conn, CuckooCommand.INSERT, fullArgs) //
+          .getIntegerMultiBulkReply() //
+          .stream() //
+          .map(s -> s > 0) //
+          .collect(Collectors.toList());
+    }
+  }
+
+  @Override
+  public List<Boolean> cfInsertNx(String key, String... items) {
+    try (Jedis conn = _conn()) {
+
+      List<byte[]> fullArgs = new ArrayList<byte[]>();
+      fullArgs.add(SafeEncoder.encode(key));
+      fullArgs.add(SafeEncoder.encode("ITEMS"));
+      fullArgs.addAll(Arrays.asList(SafeEncoder.encodeMany(items)));
+
+      return sendCommand(conn, CuckooCommand.INSERTNX, fullArgs) //
+          .getIntegerMultiBulkReply() //
+          .stream() //
+          .map(s -> s > 0) //
+          .collect(Collectors.toList());
+    }
+  }
+
+  @Override
+  public List<Boolean> cfInsertNx(String key, CFInsertOptions options, String... items) {
+    try (Jedis conn = _conn()) {
+
+      List<byte[]> fullArgs = new ArrayList<byte[]>();
+      fullArgs.add(SafeEncoder.encode(key));
+      fullArgs.addAll(options.asListOfByteArrays());
+      fullArgs.add(SafeEncoder.encode("ITEMS"));
+      fullArgs.addAll(Arrays.asList(SafeEncoder.encodeMany(items)));
+
+      return sendCommand(conn, CuckooCommand.INSERTNX, fullArgs) //
+          .getIntegerMultiBulkReply() //
+          .stream() //
+          .map(s -> s > 0) //
+          .collect(Collectors.toList());
+    }
+  }
+
+  @Override
+  public boolean cfExists(String key, String item) {
+    try (Jedis conn = _conn()) {
+      return sendCommand(conn, CuckooCommand.EXIST, //
+          SafeEncoder.encode(key), //
+          SafeEncoder.encode(item) //
+      ).getIntegerReply() == 1;
+    }
+  }
+
+  @Override
+  public boolean cfDel(String key, String item) {
+    try (Jedis conn = _conn()) {
+      return sendCommand(conn, CuckooCommand.DEL, //
+          SafeEncoder.encode(key), //
+          SafeEncoder.encode(item) //
+      ).getIntegerReply() == 1;
+    }
+  }
+
+  @Override
+  public long cfCount(String key, String item) {
+    try (Jedis conn = _conn()) {
+      return sendCommand(conn, CuckooCommand.COUNT, //
+          SafeEncoder.encode(key), //
+          SafeEncoder.encode(item) //
+      ).getIntegerReply();
+    }
+  }
+
+  @Override
+  public Map.Entry<Long, byte[]> cfScanDump(String key, long iterator) {
+    try (Jedis conn = _conn()) {
+      List<Object> response = sendCommand(conn, CuckooCommand.SCANDUMP, //
+          SafeEncoder.encode(key), //
+          Protocol.toByteArray(iterator) //
+      ).getObjectMultiBulkReply();
+
+      return new AbstractMap.SimpleImmutableEntry<Long, byte[]>(((Long) response.get(0)).longValue(), (byte[]) response.get(1));
+    }
+  }
+
+  @Override
+  public void cfLoadChunk(String key, Map.Entry<Long, byte[]> idp) {
+    try (Jedis conn = _conn()) {
+      String rep = sendCommand(conn, CuckooCommand.LOADCHUNK, //
+          SafeEncoder.encode(key), //
+          Protocol.toByteArray(idp.getKey()), //
+          idp.getValue() //
+      ).getStatusCodeReply();
+
+      if (!rep.equals("OK")) {
+        throw new JedisException(rep);
+      }
+    }
+  }
+
+  @Override
+  public Map<String, Long> cfInfo(String key) {
+    try (Jedis conn = _conn()) {
+      List<Object> values = sendCommand(conn, CuckooCommand.INFO, SafeEncoder.encode(key)).getObjectMultiBulkReply();
+
+      Map<String, Long> infoMap = new HashMap<String, Long>(values.size() / 2);
+      for (int i = 0; i < values.size(); i += 2) {
+        Long val = (Long) values.get(i + 1);
+        infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
+      }
+      return infoMap;
+    }
+  }
+
+  @Override
+  public Iterator<Map.Entry<Long, byte[]>> cfScanDumpIterator(String key) {
+    return new CfScanDumpIterator(this, key);
+  }
+
+  @Override
+  public Stream<Map.Entry<Long, byte[]>> cfScanDumpStream(String key) {
+    return StreamSupport.stream( //
+        Spliterators.spliteratorUnknownSize( //
+            new CfScanDumpIterator(this, key), //
+            Spliterator.ORDERED //
+        ), false);
+  }
+
+  /**
+   * An Iterator over the elements (Map.Entry containing the Iterator and Data)
+   * obtained for a Cuckoo Filter using CF.SCANDUMP.
+   *
+   */
+  private static class CfScanDumpIterator implements Iterator<Map.Entry<Long, byte[]>> {
+
+    private final Client client;
+    private final String key;
+    private Long current;
+
+    /**
+     * Create a CfScanDumpIterator for a given Cuckoo Filter using an instance of
+     * the Client
+     *
+     * @param client RedisBloom Filter client
+     * @param key    Name of the filter
+     */
+    public CfScanDumpIterator(Client client, String key) {
+      this.client = client;
+      this.key = key;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return scan(current) != null;
+    }
+
+    @Override
+    public Map.Entry<Long, byte[]> next() {
+      Map.Entry<Long, byte[]> dump = scan(current);
+      current = dump == null ? 0L : dump.getKey();
+      return dump;
+    }
+
+    private Map.Entry<Long, byte[]> scan(Long iter) {
+      Map.Entry<Long, byte[]> dump = client.cfScanDump(key, iter == null ? 0 : iter);
+
+      return dump.getKey() != 0L ? dump : null;
+    }
+  }
+
 }
