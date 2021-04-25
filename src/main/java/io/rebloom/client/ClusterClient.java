@@ -113,6 +113,7 @@ public class ClusterClient extends JedisCluster {
      */
     public boolean createFilter(String name, long initCapacity, double errorRate) {
         return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public Boolean execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 conn.sendCommand(Command.RESERVE, name, errorRate + "", initCapacity + "");
@@ -139,6 +140,7 @@ public class ClusterClient extends JedisCluster {
      */
     public boolean add(String name, byte[] value) {
         return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public Boolean execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 conn.sendCommand(Command.ADD, name.getBytes(), value);
@@ -157,6 +159,7 @@ public class ClusterClient extends JedisCluster {
      */
     public boolean[] insert(String name, InsertOptions options, String... items) {
         return (new JedisClusterCommand<boolean[]>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public boolean[] execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 final List<byte[]> args = new ArrayList<>();
@@ -188,6 +191,7 @@ public class ClusterClient extends JedisCluster {
      */
     public boolean exists(String name, byte[] value) {
         return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public Boolean execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 conn.sendCommand(Command.EXISTS, name.getBytes(), value);
@@ -209,6 +213,7 @@ public class ClusterClient extends JedisCluster {
      */
     public boolean[] addMulti(String name, byte[]... values){
         return (new JedisClusterCommand<boolean[]>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public boolean[] execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 return sendMultiCommand(conn, Command.MADD, name.getBytes(), values);
@@ -218,6 +223,7 @@ public class ClusterClient extends JedisCluster {
 
     public boolean[] addMulti(String name, String... values){
         return (new JedisClusterCommand<boolean[]>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public boolean[] execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 return sendMultiCommand(conn, Command.MADD, name, values);
@@ -233,6 +239,7 @@ public class ClusterClient extends JedisCluster {
      */
     public boolean[] existsMulti(String name, byte[]... values) {
         return (new JedisClusterCommand<boolean[]>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public boolean[] execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 return sendMultiCommand(conn, Command.MEXISTS, name.getBytes(), values);
@@ -242,6 +249,7 @@ public class ClusterClient extends JedisCluster {
 
     public boolean[] existsMulti(String name, String... values) {
         return (new JedisClusterCommand<boolean[]>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public boolean[] execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 return sendMultiCommand(conn, Command.MEXISTS, name, values);
@@ -256,6 +264,7 @@ public class ClusterClient extends JedisCluster {
      */
     public boolean delete(String name) {
         return (new JedisClusterCommand<Boolean>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public Boolean execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 ((Client) conn).del(name);
@@ -271,6 +280,7 @@ public class ClusterClient extends JedisCluster {
      */
     public Map<String, Object> info(String name) {
         return (new JedisClusterCommand<Map<String, Object>>(this.connectionHandler, this.maxAttempts) {
+            @Override
             public Map<String, Object> execute(Jedis connection) {
                 Connection conn = connection.getClient();
                 conn.sendCommand(Command.INFO, name.getBytes());
