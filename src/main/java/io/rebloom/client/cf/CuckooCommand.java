@@ -22,6 +22,7 @@ public enum CuckooCommand implements ProtocolCommand {
     raw = SafeEncoder.encode(alt);
   }
 
+  @Override
   public byte[] getRaw() {
     return raw;
   }
