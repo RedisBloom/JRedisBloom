@@ -48,25 +48,27 @@ jobs:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
-        
+
       # run tests!
      # - run: mvn pmd:check
-      
-      - run: mvn integration-test 
+
+      - run: mvn integration-test
 
       - run: mvn cobertura:cobertura
-      
-      - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}  
-          
-      - early_return_for_forked_pull_requests    
-      
+
+      - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
+
+      - early_return_for_forked_pull_requests
+
       - run: mvn -s .circleci.settings.xml -DskipTests deploy
 
 workflows:
   version: 2
   commit:
     jobs:
-      - build
+      - build:
+          context:
+            - common
   nightly:
     triggers:
       - schedule:
@@ -76,4 +78,6 @@ workflows:
               only:
                 - master
     jobs:
-      - build
+      - build:
+          context:
+            - common
