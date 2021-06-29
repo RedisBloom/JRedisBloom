@@ -60,7 +60,7 @@ jobs:
 
       - early_return_for_forked_pull_requests
 
-      - run: mvn -s .circleci.settings.xml -DskipTests Dgpg.skip deploy
+      - run: mvn -s .circleci.settings.xml -DskipTests -Dgpg.skip deploy
 
 workflows:
   version: 2
