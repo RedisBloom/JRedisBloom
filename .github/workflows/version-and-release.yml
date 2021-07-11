@@ -40,8 +40,8 @@ jobs:
         run: |
           mvn --no-transfer-progress \
             --batch-mode \
-            -Dgpg.passphrase="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \
-            -s -DskipTests deploy -P release
+            -Dgpg.passphrase='${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}' \
+            -DskipTests deploy -P release
         env:
           MAVEN_USERNAME: ${{secrets.OSSH_USERNAME}}
           MAVEN_PASSWORD: ${{secrets.OSSH_TOKEN}}
