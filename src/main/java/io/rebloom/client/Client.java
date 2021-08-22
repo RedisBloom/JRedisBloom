@@ -18,6 +18,10 @@ import io.rebloom.client.cf.CFInsertOptions;
 import io.rebloom.client.cf.CFReserveOptions;
 import io.rebloom.client.cf.Cuckoo;
 import io.rebloom.client.cf.CuckooCommand;
+import io.rebloom.client.cms.CMS;
+import io.rebloom.client.cms.CMSCommand;
+
+import redis.clients.jedis.BuilderFactory;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -27,14 +31,6 @@ import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.Pool;
 import redis.clients.jedis.util.SafeEncoder;
-
-import java.io.Closeable;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import io.rebloom.client.cms.CMS;
-import io.rebloom.client.cms.CMSCommand;
 
 /**
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
@@ -141,23 +137,26 @@ public class Client implements Cuckoo, CMS, Closeable {
     return sendMultiCommand(Command.INSERT, SafeEncoder.encode(name), args.toArray(new byte[args.size()][]));
   }
 
-  @SafeVarargs
-  private final boolean[] sendMultiCommand(Command cmd, byte[] name, byte[]... values) {
+  private boolean[] sendMultiCommand(Command cmd, byte[] name, byte[]... values) {
     byte[][] args = new byte[values.length + 1][];
     args[0] = name;
     System.arraycopy(values, 0, args, 1, values.length);
-    List<Long> reps;
     try (Jedis conn = _conn()) {
-      reps = sendCommand(conn, cmd, args).getIntegerMultiBulkReply();
+      Object resp = sendCommand(conn, cmd, args).getOne();
+      return toBooleanArray(BuilderFactory.BOOLEAN_LIST.build(resp));
     }
-    boolean[] ret = new boolean[values.length];
-    for (int i = 0; i < reps.size(); i++) {
-      ret[i] = reps.get(i) != 0;
-    }
-
-    return ret;
   }
 
+  private static boolean[] toBooleanArray(List<Boolean> list) {
+    if (list == null) {
+      return null;
+    }
+    boolean[] array = new boolean[list.size()];
+    for (int i = 0; i < list.size(); i++) {
+      array[i] = list.get(i);
+    }
+    return array;
+  }
 
   /**
    * Add one or more items to a filter
@@ -170,7 +169,7 @@ public class Client implements Cuckoo, CMS, Closeable {
    *
    * @see #add(String, byte[])
    */
-  public boolean[] addMulti(String name, byte[] ...values) {
+  public boolean[] addMulti(String name, byte[]... values) {
     return sendMultiCommand(Command.MADD, SafeEncoder.encode(name), values);
   }
 
@@ -185,7 +184,7 @@ public class Client implements Cuckoo, CMS, Closeable {
    *
    * @see #add(String, String)
    */
-  public boolean[] addMulti(String name, String ...values) {
+  public boolean[] addMulti(String name, String... values) {
     return addMulti(name, SafeEncoder.encodeMany(values));
   }
 
