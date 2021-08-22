@@ -181,6 +181,13 @@ public class ClientTest {
     }
 
     @Test
+    public void issue49() {
+        InsertOptions insertOptions = new InsertOptions();
+        boolean[] insert = cl.insert("mykey", insertOptions, "a", "b", "c");
+        assertEquals(3, insert.length);
+    }
+
+    @Test
     public void testInfo() {
         cl.insert("test_info", new InsertOptions().capacity(1L), "1");
         Map<String, Object> info = cl.info("test_info");
