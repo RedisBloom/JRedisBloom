@@ -63,7 +63,7 @@ Initializing the client:
 ```java
 import io.rebloom.client.Client
 
-Client client = new Client("localhost", 6378);
+Client client = new Client("localhost", 6379);
 ```
 
 Adding items to a bloom filter (created using default settings):
