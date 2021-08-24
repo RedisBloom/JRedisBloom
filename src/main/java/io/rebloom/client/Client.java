@@ -20,7 +20,11 @@ import io.rebloom.client.cf.Cuckoo;
 import io.rebloom.client.cf.CuckooCommand;
 import io.rebloom.client.cms.CMS;
 import io.rebloom.client.cms.CMSCommand;
+import io.rebloom.client.td.TDigest;
+import io.rebloom.client.td.TDigestCommand;
+import io.rebloom.client.td.TDigestValueWeight;
 
+import redis.clients.jedis.Builder;
 import redis.clients.jedis.BuilderFactory;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
@@ -35,7 +39,7 @@ import redis.clients.jedis.util.SafeEncoder;
 /**
  * Client is the main ReBloom client class, wrapping connection management and all ReBloom commands
  */
-public class Client implements Cuckoo, CMS, Closeable {
+public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
   private final Pool<Jedis> pool;
 
@@ -242,17 +246,7 @@ public class Client implements Cuckoo, CMS, Closeable {
    */
   public Map<String, Object> info(String name) {
     try (Jedis conn = _conn()) {
-      List<Object> values = sendCommand(conn, Command.INFO, SafeEncoder.encode(name)).getObjectMultiBulkReply();
-
-      Map<String, Object> infoMap = new HashMap<>(values.size() / 2);
-      for (int i = 0; i < values.size(); i += 2) {
-        Object val = values.get(i + 1);
-        if (val instanceof byte[]) {
-          val = SafeEncoder.encode((byte[]) val);
-        }
-        infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
-      }
-      return infoMap;
+      return executeCommand(conn, STRING_OBJECT_MAP, Command.INFO, name);
     }
   }
 
@@ -761,4 +755,108 @@ public class Client implements Cuckoo, CMS, Closeable {
     }
   }
 
+  private Connection sendCommand(Jedis jedis, ProtocolCommand command, String... args) {
+    Connection connection = jedis.getClient();
+    connection.sendCommand(command, args);
+    return connection;
+  }
+
+  private <T> T executeCommand(Jedis jedis, Builder<T> builder, ProtocolCommand command, String... args) {
+    return builder.build(sendCommand(jedis, command, args).getOne());
+  }
+
+  @Override
+  public void tdigestCreate(String key, int compression) {
+    try (Jedis jedis = _conn()) {
+      String response = sendCommand(jedis, TDigestCommand.CREATE, SafeEncoder.encode(key),
+          Protocol.toByteArray(compression)).getStatusCodeReply();
+      checkOK(response);
+    }
+  }
+
+  @Override
+  public void tdigestReset(String key) {
+    try (Jedis jedis = _conn()) {
+      String response = sendCommand(jedis, TDigestCommand.RESET, SafeEncoder.encode(key))
+          .getStatusCodeReply();
+      checkOK(response);
+    }
+  }
+
+  @Override
+  public void tdigestMerge(String toKey, String fromKey) {
+    try (Jedis jedis = _conn()) {
+      String response = sendCommand(jedis, TDigestCommand.MERGE,
+          SafeEncoder.encode(toKey), SafeEncoder.encode(fromKey)).getStatusCodeReply();
+      checkOK(response);
+    }
+  }
+
+  @Override
+  public Map<String, Object> tdigestInfo(String key) {
+    try (Jedis jedis = _conn()) {
+      return executeCommand(jedis, STRING_OBJECT_MAP, TDigestCommand.INFO, key);
+    }
+  }
+
+  @Override
+  public void tdigestAdd(String key, TDigestValueWeight... valueWeights) {
+    byte[][] args = new byte[1 + 2 * valueWeights.length][];
+    int ain = 0;
+    args[ain++] = SafeEncoder.encode(key);
+    for (TDigestValueWeight vw : valueWeights) {
+      args[ain++] = Protocol.toByteArray(vw.getValue());
+      args[ain++] = Protocol.toByteArray(vw.getWeight());
+    }
+    try (Jedis jedis = _conn()) {
+      String response = sendCommand(jedis, TDigestCommand.ADD, args).getStatusCodeReply();
+      checkOK(response);
+    }
+  }
+
+  @Override
+  public double tdigestCDF(String key, double value) {
+    try (Jedis jedis = _conn()) {
+      return executeCommand(jedis, DOUBLE, TDigestCommand.CDF, key, Double.toString(value));
+    }
+  }
+
+  private static final Builder<Map<String, Object>> STRING_OBJECT_MAP = new Builder<Map<String, Object>>() {
+    @Override
+    public Map<String, Object> build(Object o) {
+      List<Object> values = (List<Object>) o;
+      Map<String, Object> infoMap = new HashMap<>(values.size() / 2);
+      for (int i = 0; i < values.size(); i += 2) {
+        Object val = values.get(i + 1);
+        if (val instanceof byte[]) {
+          val = SafeEncoder.encode((byte[]) val);
+        }
+        infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
+      }
+      return infoMap;
+    }
+  };
+
+  private static final Builder<Double> DOUBLE = new Builder<Double>() {
+    @Override
+    public Double build(Object o) {
+      byte[] data = (byte[]) o;
+      if (data == null) return null;
+      String string = SafeEncoder.encode(data);
+      try {
+        return Double.valueOf(string);
+      } catch (NumberFormatException e) {
+        if (string.equals("inf") || string.equals("+inf")) return Double.POSITIVE_INFINITY;
+        if (string.equals("-inf")) return Double.NEGATIVE_INFINITY;
+        if (string.equals("nan")) return Double.NaN;
+        throw e;
+      }
+    }
+  };
+
+  private void checkOK(String response) {
+    if (!response.equals("OK")) {
+      throw new JedisException(response);
+    }
+  }
 }

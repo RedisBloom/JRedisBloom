@@ -1,6 +1,7 @@
 package io.rebloom.client;
 
-import org.junit.Before;
+import java.util.Arrays;
+import java.util.Map;
 import org.junit.Test;
 
 import redis.clients.jedis.JedisPool;
@@ -10,35 +11,15 @@ import redis.clients.jedis.exceptions.JedisException;
 import static junit.framework.TestCase.*;
 import static org.junit.Assert.assertThrows;
 
-import java.util.Arrays;
-import java.util.Map;
-
 /**
  * @author Mark Nunberg
  */
-public class ClientTest {
-    static final int port;
-    static {
-        String tmpPort = System.getenv("REBLOOM_TEST_PORT");
-        if (tmpPort != null && !tmpPort.isEmpty()) {
-            port = Integer.parseInt(tmpPort);
-        } else {
-            port = 6379;
-        }
-    }
-
-    private Client cl = null;
-
-    @Before
-    public void clearDb() {
-        cl = new Client("localhost", port);
-        cl._conn().flushDB();
-    }
+public class ClientTest extends TestBase {
     
     @Test
     public void createWithPool() {
       Client refClient;
-      try(Client client = new Client(new JedisPool("localhost", port))){
+      try(Client client = new Client(new JedisPool())){
         refClient = client;
         client.createFilter("createBloom", 100, 0.001);
         assertTrue(client.delete("createBloom"));
