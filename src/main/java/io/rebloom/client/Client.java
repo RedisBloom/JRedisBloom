@@ -845,16 +845,12 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   private static final Builder<Map<String, Object>> STRING_OBJECT_MAP = new Builder<Map<String, Object>>() {
     @Override
     public Map<String, Object> build(Object o) {
-      List<Object> values = (List<Object>) o;
-      Map<String, Object> infoMap = new HashMap<>(values.size() / 2);
+      List<Object> values = (List<Object>) SafeEncoder.encodeObject(o);
+      Map<String, Object> map = new HashMap<>(values.size() / 2);
       for (int i = 0; i < values.size(); i += 2) {
-        Object val = values.get(i + 1);
-        if (val instanceof byte[]) {
-          val = SafeEncoder.encode((byte[]) val);
-        }
-        infoMap.put(SafeEncoder.encode((byte[]) values.get(i)), val);
+        map.put((String) values.get(i), values.get(i + 1));
       }
-      return infoMap;
+      return map;
     }
   };
 
