@@ -15,4 +15,10 @@ public interface TDigest {
   void tdigestAdd(String key, TDigestValueWeight... valueWeights);
 
   double tdigestCDF(String key, double value);
+
+  double tdigestQuantile(String key, double quantile);
+
+  double tdigestMin(String key);
+
+  double tdigestMax(String key);
 }

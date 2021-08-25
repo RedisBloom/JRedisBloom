@@ -821,6 +821,27 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     }
   }
 
+  @Override
+  public double tdigestQuantile(String key, double quantile) {
+    try (Jedis jedis = _conn()) {
+      return executeCommand(jedis, DOUBLE, TDigestCommand.QUANTILE, key, Double.toString(quantile));
+    }
+  }
+
+  @Override
+  public double tdigestMin(String key) {
+    try (Jedis jedis = _conn()) {
+      return executeCommand(jedis, DOUBLE, TDigestCommand.MIN, key);
+    }
+  }
+
+  @Override
+  public double tdigestMax(String key) {
+    try (Jedis jedis = _conn()) {
+      return executeCommand(jedis, DOUBLE, TDigestCommand.MAX, key);
+    }
+  }
+
   private static final Builder<Map<String, Object>> STRING_OBJECT_MAP = new Builder<Map<String, Object>>() {
     @Override
     public Map<String, Object> build(Object o) {

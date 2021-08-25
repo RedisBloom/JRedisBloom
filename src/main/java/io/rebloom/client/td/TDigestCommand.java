@@ -6,7 +6,7 @@ import redis.clients.jedis.util.SafeEncoder;
 public enum TDigestCommand implements ProtocolCommand {
 
   CREATE, INFO, ADD, RESET, MERGE,
-  CDF;
+  CDF, QUANTILE, MIN, MAX;
 
   private final byte[] raw;
 
