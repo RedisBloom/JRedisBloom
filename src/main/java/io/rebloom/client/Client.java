@@ -14,15 +14,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import io.rebloom.client.cf.CFInsertOptions;
-import io.rebloom.client.cf.CFReserveOptions;
-import io.rebloom.client.cf.Cuckoo;
-import io.rebloom.client.cf.CuckooCommand;
-import io.rebloom.client.cms.CMS;
-import io.rebloom.client.cms.CMSCommand;
-import io.rebloom.client.td.TDigest;
-import io.rebloom.client.td.TDigestCommand;
-import io.rebloom.client.td.TDigestValueWeight;
+import io.rebloom.client.cf.*;
+import io.rebloom.client.cms.*;
+import io.rebloom.client.td.*;
 
 import redis.clients.jedis.Builder;
 import redis.clients.jedis.BuilderFactory;
@@ -81,6 +75,15 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
    */
   public Client(String host, int port) {
     this(host, port, 500, 100);
+  }
+
+  @Override
+  public void close(){
+    this.pool.close();
+  }
+
+  Jedis _conn() {
+    return pool.getResource();
   }
 
   /**
@@ -269,9 +272,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
           Protocol.toByteArray(width), Protocol.toByteArray(depth),Protocol.toByteArray(decay))
           .getStatusCodeReply();
 
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 
@@ -295,11 +296,13 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   * Adds an item to the filter
   * @param key The key of the filter
   * @param item The item to increment
+  * @param increment
   * @return item dropped from the list.
   */
  public String topkIncrBy(String key, String item, long increment) {
    try (Jedis conn = _conn()) {
-     return sendCommand(conn, TopKCommand.INCRBY, SafeEncoder.encode(key), SafeEncoder.encode(item), Protocol.toByteArray(increment))
+     return sendCommand(conn, TopKCommand.INCRBY, SafeEncoder.encode(key),
+         SafeEncoder.encode(item), Protocol.toByteArray(increment))
          .getMultiBulkReply().get(0);
    }
  }
@@ -365,9 +368,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
          Protocol.toByteArray(width), //
          Protocol.toByteArray(depth)).getStatusCodeReply();
 
-     if (!rep.equals("OK")) {
-       throw new JedisException(rep);
-     }
+     checkOK(rep);
    }
  }
 
@@ -379,9 +380,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
          Protocol.toByteArray(error), //
          Protocol.toByteArray(probability)).getStatusCodeReply();
 
-     if (!rep.equals("OK")) {
-       throw new JedisException(rep);
-     }
+     checkOK(rep);
    }
  }
 
@@ -431,9 +430,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
      String rep = sendCommand(conn, CMSCommand.MERGE, args).getStatusCodeReply();
 
-     if (!rep.equals("OK")) {
-       throw new JedisException(rep);
-     }
+     checkOK(rep);
    }
  }
 
@@ -455,9 +452,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
      String rep = sendCommand(conn, CMSCommand.MERGE, args).getStatusCodeReply();
 
-     if (!rep.equals("OK")) {
-       throw new JedisException(rep);
-     }
+     checkOK(rep);
    }
 
  }
@@ -475,15 +470,6 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
      return infoMap;
    }
  }
-
-  @Override
-  public void close(){
-    this.pool.close();
-  }
-
-  Jedis _conn() {
-    return pool.getResource();
-  }
 
   private Connection sendCommand(Jedis conn, String key, ProtocolCommand command, String ...args) {
     byte[][] fullArgs = new byte[args.length + 1][];
@@ -755,15 +741,9 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     }
   }
 
-  private Connection sendCommand(Jedis jedis, ProtocolCommand command, String... args) {
-    Connection connection = jedis.getClient();
-    connection.sendCommand(command, args);
-    return connection;
-  }
-
-  private <T> T executeCommand(Jedis jedis, Builder<T> builder, ProtocolCommand command, String... args) {
-    return builder.build(sendCommand(jedis, command, args).getOne());
-  }
+  //
+  // TDigest commands
+  //
 
   @Override
   public void tdigestCreate(String key, int compression) {
@@ -840,6 +820,16 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     try (Jedis jedis = _conn()) {
       return executeCommand(jedis, DOUBLE, TDigestCommand.MAX, key);
     }
+  }
+
+  private Connection sendCommand(Jedis jedis, ProtocolCommand command, String... args) {
+    Connection connection = jedis.getClient();
+    connection.sendCommand(command, args);
+    return connection;
+  }
+
+  private <T> T executeCommand(Jedis jedis, Builder<T> builder, ProtocolCommand command, String... args) {
+    return builder.build(sendCommand(jedis, command, args).getOne());
   }
 
   private static final Builder<Map<String, Object>> STRING_OBJECT_MAP = new Builder<Map<String, Object>>() {
