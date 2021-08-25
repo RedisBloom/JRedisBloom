@@ -7,8 +7,6 @@ import static org.junit.Assert.assertThrows;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Before;
 import org.junit.Test;
 
 import redis.clients.jedis.exceptions.JedisException;
@@ -17,24 +15,7 @@ import redis.clients.jedis.exceptions.JedisException;
  * Tests for the Count-Min-Sketch Implementation
  *
  */
-public class CMSTests {
-  static final int port;
-  static {
-    String tmpPort = System.getenv("REBLOOM_TEST_PORT");
-    if (tmpPort != null && !tmpPort.isEmpty()) {
-      port = Integer.parseInt(tmpPort);
-    } else {
-      port = 6379;
-    }
-  }
-
-  Client cl = null;
-
-  @Before
-  public void clearDb() {
-    cl = new Client("localhost", port);
-    cl._conn().flushDB();
-  }
+public class CMSTests extends TestBase {
 
   @Test
   public void testInitByDim() {

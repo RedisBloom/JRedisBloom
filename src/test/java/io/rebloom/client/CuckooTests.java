@@ -11,8 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.junit.Before;
 import org.junit.Test;
 
 import io.rebloom.client.cf.CFInsertOptions;
@@ -23,24 +21,7 @@ import redis.clients.jedis.exceptions.JedisDataException;
  * Tests for the Cuckoo Filter Implementation
  *
  */
-public class CuckooTests {
-  static final int port;
-  static {
-    String tmpPort = System.getenv("REBLOOM_TEST_PORT");
-    if (tmpPort != null && !tmpPort.isEmpty()) {
-      port = Integer.parseInt(tmpPort);
-    } else {
-      port = 6379;
-    }
-  }
-
-  Client cl = null;
-
-  @Before
-  public void clearDb() {
-    cl = new Client("localhost", port);
-    cl._conn().flushDB();
-  }
+public class CuckooTests extends TestBase {
 
   @Test
   public void testReservationCapacityOnly() {
