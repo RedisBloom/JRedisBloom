@@ -1,5 +1,7 @@
 package io.rebloom.client;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.Map;
 import org.junit.Test;
@@ -7,9 +9,6 @@ import org.junit.Test;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
-
-import static junit.framework.TestCase.*;
-import static org.junit.Assert.assertThrows;
 
 /**
  * @author Mark Nunberg
@@ -50,6 +49,29 @@ public class ClientTest extends TestBase {
         cl.createFilter("myBloom", 100, 0.1);
         cl.createFilter("myBloom", 100, 0.1);
     }
+
+  @Test
+  public void reserveV2() {
+    cl.bfReserve("bfnonscale", 0.001, 2);
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "b"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "c"));
+  }
+
+  @Test
+  public void reserveNonScaling() {
+    cl.bfReserve("bfnonscale", 0.001, 2, ReserveParams.reserveParams().nonScaling());
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "b"));
+    assertArrayEquals(new boolean[]{}, cl.bfInsert("bfnonscale", "c"));
+  }
+
+  @Test
+  public void reserveExpansion() {
+    // bf.reserve bfexpansion 0.001 1000 expansion 4
+    cl.bfReserve("bfexpansion", 0.001, 1000, ReserveParams.reserveParams().expansion(4));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "a"));
+  }
 
     @Test
     public void addExistsString() {
@@ -161,6 +183,25 @@ public class ClientTest extends TestBase {
         Exception exception = assertThrows(JedisDataException.class, () -> cl.info("not_exist"));
         assertEquals("ERR not found", exception.getMessage());
     }
+
+  @Test
+  public void insertNonScaling() {
+    boolean[] insert = cl.bfInsert("nonscaling_err", InsertOptions.insertOptions().capacity(4),
+        ReserveParams.reserveParams().nonScaling(), "a", "b", "c");
+    assertEquals(3, insert.length);
+
+    insert = cl.bfInsert("nonscaling_err", "d", "e");
+    assertEquals(1, insert.length);
+  }
+
+  @Test
+  public void insertExpansion() {
+    // BF.INSERT bfexpansion CAPACITY 3 expansion 3 ITEMS a b c d e f g h j k l o i u y t r e w q
+    boolean[] insert = cl.bfInsert("bfexpansion", InsertOptions.insertOptions().capacity(3),
+        ReserveParams.reserveParams().expansion(3), "a", "b", "c", "d", "e", "f", "g", "h",
+        "j", "k", "l", "o", "i", "u", "y", "t", "r", "e", "w", "q");
+    assertEquals(20, insert.length);
+  }
 
     @Test
     public void createTopKFilter() {

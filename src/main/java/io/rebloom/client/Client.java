@@ -26,6 +26,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.Pool;
 import redis.clients.jedis.util.SafeEncoder;
@@ -103,13 +104,19 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     }
   }
 
+  public void bfReserve(String key, double errorRate, long capacity) {
+    bfReserve(key, errorRate, capacity, null);
+  }
+
   public void bfReserve(String key, double errorRate, long capacity, ReserveParams params) {
     try (Jedis conn = _conn()) {
       final List<byte[]> args = new ArrayList<>();
       args.add(SafeEncoder.encode(key));
       args.add(Protocol.toByteArray(errorRate));
       args.add(Protocol.toByteArray(capacity));
-      args.addAll(params.getParams());
+      if (params != null) {
+        args.addAll(params.getParams());
+      }
       String response = sendCommand(conn, Command.RESERVE, args).getStatusCodeReply();
       checkOK(response);
     }
@@ -165,18 +172,30 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     }
   }
 
+  public boolean[] bfInsert(String key, String... items) {
+    return bfInsert(key, (InsertOptions) null, (ReserveParams) null, items);
+  }
+
   public boolean[] bfInsert(String key, InsertOptions insertOptions, ReserveParams reserveParams, String... items) {
     final List<byte[]> args = new ArrayList<>();
     args.add(SafeEncoder.encode(key));
-    args.addAll(insertOptions.getOptions());
-    args.addAll(reserveParams.getParams());
+    if (insertOptions != null) {
+      args.addAll(insertOptions.getOptions());
+    }
+    if (reserveParams != null) {
+      args.addAll(reserveParams.getParams());
+    }
     args.add(Keywords.ITEMS.getRaw());
     for (String item : items) {
       args.add(SafeEncoder.encode(item));
     }
     try (Jedis conn = _conn()) {
-      Object resp = sendCommand(conn, Command.INSERT, args).getOne();
-      return toBooleanArray(BuilderFactory.BOOLEAN_LIST.build(resp));
+      List<Object> listResp = sendCommand(conn, Command.INSERT, args).getObjectMultiBulkReply();
+      final int lastIndex = listResp.size() - 1;
+      if (listResp.get(lastIndex) instanceof JedisDataException) {
+        listResp.remove(lastIndex);
+      }
+      return toBooleanArray(BuilderFactory.BOOLEAN_LIST.build(listResp));
     }
   }
 
