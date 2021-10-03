@@ -99,23 +99,19 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     try (Jedis conn = _conn()) {
       String rep = sendCommand(conn, Command.RESERVE, SafeEncoder.encode(name),
           Protocol.toByteArray(errorRate), Protocol.toByteArray(initCapacity)).getStatusCodeReply();
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 
-  public void reserve(String key, double errorRate, long capacity, ReserveParams params) {
+  public void bfReserve(String key, double errorRate, long capacity, ReserveParams params) {
     try (Jedis conn = _conn()) {
       final List<byte[]> args = new ArrayList<>();
       args.add(SafeEncoder.encode(key));
       args.add(Protocol.toByteArray(errorRate));
       args.add(Protocol.toByteArray(capacity));
       args.addAll(params.getParams());
-      String rep = sendCommand(conn, Command.RESERVE, args).getStatusCodeReply();
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      String response = sendCommand(conn, Command.RESERVE, args).getStatusCodeReply();
+      checkOK(response);
     }
   }
 
@@ -169,7 +165,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     }
   }
 
-  public boolean[] insert(String key, InsertOptions insertOptions, ReserveParams reserveParams, String... items) {
+  public boolean[] bfInsert(String key, InsertOptions insertOptions, ReserveParams reserveParams, String... items) {
     final List<byte[]> args = new ArrayList<>();
     args.add(SafeEncoder.encode(key));
     args.addAll(insertOptions.getOptions());
