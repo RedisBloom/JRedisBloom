@@ -97,7 +97,22 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
    */
   public void createFilter(String name, long initCapacity, double errorRate) {
     try (Jedis conn = _conn()) {
-      String rep = sendCommand(conn, Command.RESERVE, SafeEncoder.encode(name), Protocol.toByteArray(errorRate), Protocol.toByteArray(initCapacity)).getStatusCodeReply();
+      String rep = sendCommand(conn, Command.RESERVE, SafeEncoder.encode(name),
+          Protocol.toByteArray(errorRate), Protocol.toByteArray(initCapacity)).getStatusCodeReply();
+      if (!rep.equals("OK")) {
+        throw new JedisException(rep);
+      }
+    }
+  }
+
+  public void reserve(String key, double errorRate, long capacity, ReserveParams params) {
+    try (Jedis conn = _conn()) {
+      final List<byte[]> args = new ArrayList<>();
+      args.add(SafeEncoder.encode(key));
+      args.add(Protocol.toByteArray(errorRate));
+      args.add(Protocol.toByteArray(capacity));
+      args.addAll(params.getParams());
+      String rep = sendCommand(conn, Command.RESERVE, args).getStatusCodeReply();
       if (!rep.equals("OK")) {
         throw new JedisException(rep);
       }
@@ -150,6 +165,21 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     System.arraycopy(values, 0, args, 1, values.length);
     try (Jedis conn = _conn()) {
       Object resp = sendCommand(conn, cmd, args).getOne();
+      return toBooleanArray(BuilderFactory.BOOLEAN_LIST.build(resp));
+    }
+  }
+
+  public boolean[] insert(String key, InsertOptions insertOptions, ReserveParams reserveParams, String... items) {
+    final List<byte[]> args = new ArrayList<>();
+    args.add(SafeEncoder.encode(key));
+    args.addAll(insertOptions.getOptions());
+    args.addAll(reserveParams.getParams());
+    args.add(Keywords.ITEMS.getRaw());
+    for (String item : items) {
+      args.add(SafeEncoder.encode(item));
+    }
+    try (Jedis conn = _conn()) {
+      Object resp = sendCommand(conn, Command.INSERT, args).getOne();
       return toBooleanArray(BuilderFactory.BOOLEAN_LIST.build(resp));
     }
   }
@@ -504,9 +534,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
       String rep = sendCommand(conn, CuckooCommand.RESERVE, fullArgs).getStatusCodeReply();
 
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 
@@ -518,9 +546,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
           Protocol.toByteArray(capacity) //
       ).getStatusCodeReply();
 
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 
@@ -665,9 +691,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
           idp.getValue() //
       ).getStatusCodeReply();
 
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 

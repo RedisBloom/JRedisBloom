@@ -9,6 +9,8 @@ public enum Keywords implements ProtocolCommand {
     CAPACITY,
     ERROR,
     NOCREATE,
+    EXPANSION,
+    NONSCALING,
     ITEMS;
 
     private final byte[] raw;
