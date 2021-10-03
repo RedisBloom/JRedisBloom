@@ -130,23 +130,6 @@ public class ClientTest extends TestBase {
         client.createFilter("specialBloom", 10000, 0.0001);
         client.add("specialBloom", "foo");
     }
-   
-    @Test
-    public void createTopKFilter() {
-      cl.topkCreateFilter("aaa", 30, 2000, 7, 0.925);
-      
-      assertEquals(Arrays.asList(null, null), cl.topkAdd("aaa", "bb", "cc"));
-      
-      assertEquals(Arrays.asList(true, false, true), cl.topkQuery("aaa", "bb", "gg", "cc"));
-      
-      assertEquals(Arrays.asList(1L, 0L, 1L), cl.topkCount("aaa", "bb", "gg", "cc"));
-
-      assertTrue( cl.topkList("aaa").stream().allMatch( s -> Arrays.asList("bb", "cc").contains(s) || s == null));
-      
-      assertEquals(null, cl.topkIncrBy("aaa", "ff", 10));
-      
-      assertTrue( cl.topkList("aaa").stream().allMatch( s -> Arrays.asList("bb", "cc", "ff").contains(s) || s == null));
-    }
 
     @Test
     public void testInsert() {
@@ -177,5 +160,22 @@ public class ClientTest extends TestBase {
         // returning an error if the filter does not already exist
         Exception exception = assertThrows(JedisDataException.class, () -> cl.info("not_exist"));
         assertEquals("ERR not found", exception.getMessage());
+    }
+
+    @Test
+    public void createTopKFilter() {
+        cl.topkCreateFilter("aaa", 30, 2000, 7, 0.925);
+
+        assertEquals(Arrays.asList(null, null), cl.topkAdd("aaa", "bb", "cc"));
+
+        assertEquals(Arrays.asList(true, false, true), cl.topkQuery("aaa", "bb", "gg", "cc"));
+
+        assertEquals(Arrays.asList(1L, 0L, 1L), cl.topkCount("aaa", "bb", "gg", "cc"));
+
+        assertTrue(cl.topkList("aaa").stream().allMatch(s -> Arrays.asList("bb", "cc").contains(s) || s == null));
+
+        assertEquals(null, cl.topkIncrBy("aaa", "ff", 10));
+
+        assertTrue(cl.topkList("aaa").stream().allMatch(s -> Arrays.asList("bb", "cc", "ff").contains(s) || s == null));
     }
 }
