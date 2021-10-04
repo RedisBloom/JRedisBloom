@@ -7,20 +7,30 @@ import static redis.clients.jedis.Protocol.toByteArray;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * To be used by both BF.RESERVE and BR.INSERT commands.
+ * <p>
+ * Supported arguments:
+ * <ul><li>EXPANSION</li><li>NONSCALING</li></ul>
+ */
 public class ReserveParams {
 
-  private int expnasion = -1;
+  private int expansion = 0;
   private boolean nonScaling = false;
 
   public ReserveParams() {
   }
 
+  /**
+   * @return ReserveParams
+   * @see ReserveParams
+   */
   public static ReserveParams reserveParams() {
     return new ReserveParams();
   }
 
   public ReserveParams expansion(int expansion) {
-    this.expnasion = expansion;
+    this.expansion = expansion;
     return this;
   }
 
@@ -31,9 +41,9 @@ public class ReserveParams {
 
   public List<byte[]> getParams() {
     List<byte[]> args = new ArrayList<>();
-    if (expnasion >= 0) {
+    if (expansion > 0) {
       args.add(EXPANSION.getRaw());
-      args.add(toByteArray(expnasion));
+      args.add(toByteArray(expansion));
     }
     if (nonScaling) {
       args.add(NONSCALING.getRaw());

@@ -52,25 +52,35 @@ public class ClientTest extends TestBase {
 
   @Test
   public void reserveV2() {
-    cl.bfReserve("bfnonscale", 0.001, 2);
-    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "a"));
-    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "b"));
-    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "c"));
+    cl.bfReserve("reserve-basic", 0.001, 2);
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("reserve-basic", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("reserve-basic", "b"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("reserve-basic", "c"));
+  }
+
+  @Test
+  public void reserveEmptyParams() {
+    cl.bfReserve("empty-param", 0.001, 2, ReserveParams.reserveParams());
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("empty-param", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("empty-param", "b"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("empty-param", "c"));
   }
 
   @Test
   public void reserveNonScaling() {
-    cl.bfReserve("bfnonscale", 0.001, 2, ReserveParams.reserveParams().nonScaling());
-    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "a"));
-    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "b"));
-    assertArrayEquals(new boolean[]{}, cl.bfInsert("bfnonscale", "c"));
+    cl.bfReserve("nonscaling", 0.001, 2, ReserveParams.reserveParams().nonScaling());
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("nonscaling", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("nonscaling", "b"));
+    assertArrayEquals(new boolean[]{}, cl.bfInsert("nonscaling", "c"));
   }
 
   @Test
   public void reserveExpansion() {
     // bf.reserve bfexpansion 0.001 1000 expansion 4
     cl.bfReserve("bfexpansion", 0.001, 1000, ReserveParams.reserveParams().expansion(4));
-    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfnonscale", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfexpansion", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfexpansion",
+        InsertOptions.insertOptions().nocreate(), (ReserveParams) null, "b"));
   }
 
     @Test
