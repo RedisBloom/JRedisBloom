@@ -3,18 +3,18 @@ package io.rebloom.client;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.util.SafeEncoder;
 
-import java.util.Locale;
-
 public enum Keywords implements ProtocolCommand {
     CAPACITY,
     ERROR,
     NOCREATE,
+    EXPANSION,
+    NONSCALING,
     ITEMS;
 
     private final byte[] raw;
 
     Keywords() {
-        raw = SafeEncoder.encode(this.name().toLowerCase(Locale.ENGLISH));
+        raw = SafeEncoder.encode(name());
     }
 
     @Override

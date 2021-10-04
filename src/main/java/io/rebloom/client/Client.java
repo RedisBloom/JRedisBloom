@@ -26,6 +26,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.Pool;
 import redis.clients.jedis.util.SafeEncoder;
@@ -97,10 +98,27 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
    */
   public void createFilter(String name, long initCapacity, double errorRate) {
     try (Jedis conn = _conn()) {
-      String rep = sendCommand(conn, Command.RESERVE, SafeEncoder.encode(name), Protocol.toByteArray(errorRate), Protocol.toByteArray(initCapacity)).getStatusCodeReply();
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
+      String rep = sendCommand(conn, Command.RESERVE, SafeEncoder.encode(name),
+          Protocol.toByteArray(errorRate), Protocol.toByteArray(initCapacity)).getStatusCodeReply();
+      checkOK(rep);
+    }
+  }
+
+  public void bfReserve(String key, double errorRate, long capacity) {
+    bfReserve(key, errorRate, capacity, null);
+  }
+
+  public void bfReserve(String key, double errorRate, long capacity, ReserveParams params) {
+    try (Jedis conn = _conn()) {
+      final List<byte[]> args = new ArrayList<>();
+      args.add(SafeEncoder.encode(key));
+      args.add(Protocol.toByteArray(errorRate));
+      args.add(Protocol.toByteArray(capacity));
+      if (params != null) {
+        args.addAll(params.getParams());
       }
+      String response = sendCommand(conn, Command.RESERVE, args).getStatusCodeReply();
+      checkOK(response);
     }
   }
 
@@ -151,6 +169,33 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     try (Jedis conn = _conn()) {
       Object resp = sendCommand(conn, cmd, args).getOne();
       return toBooleanArray(BuilderFactory.BOOLEAN_LIST.build(resp));
+    }
+  }
+
+  public boolean[] bfInsert(String key, String... items) {
+    return bfInsert(key, (InsertOptions) null, (ReserveParams) null, items);
+  }
+
+  public boolean[] bfInsert(String key, InsertOptions insertOptions, ReserveParams reserveParams, String... items) {
+    final List<byte[]> args = new ArrayList<>();
+    args.add(SafeEncoder.encode(key));
+    if (insertOptions != null) {
+      args.addAll(insertOptions.getOptions());
+    }
+    if (reserveParams != null) {
+      args.addAll(reserveParams.getParams());
+    }
+    args.add(Keywords.ITEMS.getRaw());
+    for (String item : items) {
+      args.add(SafeEncoder.encode(item));
+    }
+    try (Jedis conn = _conn()) {
+      List<Object> listResp = sendCommand(conn, Command.INSERT, args).getObjectMultiBulkReply();
+      final int lastIndex = listResp.size() - 1;
+      if (listResp.get(lastIndex) instanceof JedisDataException) {
+        listResp.remove(lastIndex);
+      }
+      return toBooleanArray(BuilderFactory.BOOLEAN_LIST.build(listResp));
     }
   }
 
@@ -504,9 +549,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
       String rep = sendCommand(conn, CuckooCommand.RESERVE, fullArgs).getStatusCodeReply();
 
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 
@@ -518,9 +561,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
           Protocol.toByteArray(capacity) //
       ).getStatusCodeReply();
 
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 
@@ -665,9 +706,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
           idp.getValue() //
       ).getStatusCodeReply();
 
-      if (!rep.equals("OK")) {
-        throw new JedisException(rep);
-      }
+      checkOK(rep);
     }
   }
 

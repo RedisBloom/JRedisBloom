@@ -1,5 +1,7 @@
 package io.rebloom.client;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.Map;
 import org.junit.Test;
@@ -7,9 +9,6 @@ import org.junit.Test;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
-
-import static junit.framework.TestCase.*;
-import static org.junit.Assert.assertThrows;
 
 /**
  * @author Mark Nunberg
@@ -50,6 +49,39 @@ public class ClientTest extends TestBase {
         cl.createFilter("myBloom", 100, 0.1);
         cl.createFilter("myBloom", 100, 0.1);
     }
+
+  @Test
+  public void reserveV2() {
+    cl.bfReserve("reserve-basic", 0.001, 2);
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("reserve-basic", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("reserve-basic", "b"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("reserve-basic", "c"));
+  }
+
+  @Test
+  public void reserveEmptyParams() {
+    cl.bfReserve("empty-param", 0.001, 2, ReserveParams.reserveParams());
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("empty-param", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("empty-param", "b"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("empty-param", "c"));
+  }
+
+  @Test
+  public void reserveNonScaling() {
+    cl.bfReserve("nonscaling", 0.001, 2, ReserveParams.reserveParams().nonScaling());
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("nonscaling", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("nonscaling", "b"));
+    assertArrayEquals(new boolean[]{}, cl.bfInsert("nonscaling", "c"));
+  }
+
+  @Test
+  public void reserveExpansion() {
+    // bf.reserve bfexpansion 0.001 1000 expansion 4
+    cl.bfReserve("bfexpansion", 0.001, 1000, ReserveParams.reserveParams().expansion(4));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfexpansion", "a"));
+    assertArrayEquals(new boolean[]{true}, cl.bfInsert("bfexpansion",
+        InsertOptions.insertOptions().nocreate(), (ReserveParams) null, "b"));
+  }
 
     @Test
     public void addExistsString() {
@@ -130,23 +162,6 @@ public class ClientTest extends TestBase {
         client.createFilter("specialBloom", 10000, 0.0001);
         client.add("specialBloom", "foo");
     }
-   
-    @Test
-    public void createTopKFilter() {
-      cl.topkCreateFilter("aaa", 30, 2000, 7, 0.925);
-      
-      assertEquals(Arrays.asList(null, null), cl.topkAdd("aaa", "bb", "cc"));
-      
-      assertEquals(Arrays.asList(true, false, true), cl.topkQuery("aaa", "bb", "gg", "cc"));
-      
-      assertEquals(Arrays.asList(1L, 0L, 1L), cl.topkCount("aaa", "bb", "gg", "cc"));
-
-      assertTrue( cl.topkList("aaa").stream().allMatch( s -> Arrays.asList("bb", "cc").contains(s) || s == null));
-      
-      assertEquals(null, cl.topkIncrBy("aaa", "ff", 10));
-      
-      assertTrue( cl.topkList("aaa").stream().allMatch( s -> Arrays.asList("bb", "cc", "ff").contains(s) || s == null));
-    }
 
     @Test
     public void testInsert() {
@@ -177,5 +192,41 @@ public class ClientTest extends TestBase {
         // returning an error if the filter does not already exist
         Exception exception = assertThrows(JedisDataException.class, () -> cl.info("not_exist"));
         assertEquals("ERR not found", exception.getMessage());
+    }
+
+  @Test
+  public void insertNonScaling() {
+    boolean[] insert = cl.bfInsert("nonscaling_err", InsertOptions.insertOptions().capacity(4),
+        ReserveParams.reserveParams().nonScaling(), "a", "b", "c");
+    assertEquals(3, insert.length);
+
+    insert = cl.bfInsert("nonscaling_err", "d", "e");
+    assertEquals(1, insert.length);
+  }
+
+  @Test
+  public void insertExpansion() {
+    // BF.INSERT bfexpansion CAPACITY 3 expansion 3 ITEMS a b c d e f g h j k l o i u y t r e w q
+    boolean[] insert = cl.bfInsert("bfexpansion", InsertOptions.insertOptions().capacity(3),
+        ReserveParams.reserveParams().expansion(3), "a", "b", "c", "d", "e", "f", "g", "h",
+        "j", "k", "l", "o", "i", "u", "y", "t", "r", "e", "w", "q");
+    assertEquals(20, insert.length);
+  }
+
+    @Test
+    public void createTopKFilter() {
+        cl.topkCreateFilter("aaa", 30, 2000, 7, 0.925);
+
+        assertEquals(Arrays.asList(null, null), cl.topkAdd("aaa", "bb", "cc"));
+
+        assertEquals(Arrays.asList(true, false, true), cl.topkQuery("aaa", "bb", "gg", "cc"));
+
+        assertEquals(Arrays.asList(1L, 0L, 1L), cl.topkCount("aaa", "bb", "gg", "cc"));
+
+        assertTrue(cl.topkList("aaa").stream().allMatch(s -> Arrays.asList("bb", "cc").contains(s) || s == null));
+
+        assertEquals(null, cl.topkIncrBy("aaa", "ff", 10));
+
+        assertTrue(cl.topkList("aaa").stream().allMatch(s -> Arrays.asList("bb", "cc", "ff").contains(s) || s == null));
     }
 }

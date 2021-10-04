@@ -11,6 +11,9 @@ import static io.rebloom.client.Keywords.*;
 public class InsertOptions {
     private final List<byte[]> options = new ArrayList<>();
 
+  public static InsertOptions insertOptions() {
+    return new InsertOptions();
+  }
     /**
      * If specified, should be followed by the desired capacity for the filter to be created
      * @param capacity
