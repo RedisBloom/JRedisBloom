@@ -150,7 +150,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
    * @param name The name of the filter
    * @param options {@link io.rebloom.client.InsertOptions}
    * @param items items to add to the filter
-   * @return
+   * @return an array of booleans
    */
   public boolean[] insert(String name, InsertOptions options, String... items) {
     final List<byte[]> args = new ArrayList<>();
@@ -278,7 +278,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
   /**
    * Remove the filter
-   * @param name
+   * @param name filter name
    * @return true if delete the filter, false is not delete the filter
    */
   public boolean delete(String name) {
@@ -289,8 +289,8 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
   /**
    * Get information about the filter
-   * @param name
-   * @return Return information
+   * @param name filter name
+   * @return information
    */
   public Map<String, Object> info(String name) {
     try (Jedis conn = _conn()) {
@@ -302,11 +302,6 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
    * TOPK.RESERVE key topk width depth decay
    *
    * Reserve a topk filter.
-   * @param key The key of the filter
-   * @param topk
-   * @param width
-   * @param depth
-   * @param decay
    *
    * Note that if a filter is not reserved, a new one is created when {@link #add(String, byte[])}
    * is called.
@@ -341,7 +336,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   * Adds an item to the filter
   * @param key The key of the filter
   * @param item The item to increment
-  * @param increment
+  * @param increment The increment
   * @return item dropped from the list.
   */
  public String topkIncrBy(String key, String item, long increment) {
