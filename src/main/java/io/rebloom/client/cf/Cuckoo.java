@@ -153,8 +153,7 @@ public interface Cuckoo {
    * proper sequence.
    *
    * @param key Name of the filter
-   * @return Returns an iterator over the Map.Entry<Long, byte[]> containing the chunks
-   *         of byte[] representing the filter
+   * @return An iterator over the Pair containing the chunks of byte[] representing the filter
    */
   Iterator<Map.Entry<Long, byte[]>> cfScanDumpIterator(String key);
 
@@ -166,8 +165,7 @@ public interface Cuckoo {
    * Returns a sequential Stream with the Map.Entry containing the Iterator and
    * Data as its source.
    *
-   * @return Returns a sequential Stream of Map.Entry<Long, byte[]> containing the Iterator and
-   *         Data
+   * @return A sequential Stream of Pair of iterator and data
    */
   Stream<Map.Entry<Long, byte[]>> cfScanDumpStream(String key);
 
@@ -176,8 +174,7 @@ public interface Cuckoo {
    * SCANDUMP command for example usage.
    *
    * @param key         Name of the filter to restore
-   * @param iterAndData a Map.Entry<Long, byte[]> containing the Iterator and
-   *                    Data.
+   * @param iterAndData Pair of iterator and data
    */
   void cfLoadChunk(String key, Map.Entry<Long, byte[]> iterAndData);
 

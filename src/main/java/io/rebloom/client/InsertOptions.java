@@ -16,8 +16,6 @@ public class InsertOptions {
   }
     /**
      * If specified, should be followed by the desired capacity for the filter to be created
-     * @param capacity
-     * @return
      */
     public InsertOptions capacity(final long capacity) {
         options.add(CAPACITY.getRaw());
@@ -27,8 +25,6 @@ public class InsertOptions {
 
     /**
      * If specified, should be followed by the the error ratio of the newly created filter if it does not yet exist
-     * @param errorRate
-     * @return
      */
     public InsertOptions error(final double errorRate) {
         options.add(ERROR.getRaw());
@@ -39,7 +35,6 @@ public class InsertOptions {
     /**
      * If specified, indicates that the filter should not be created if it does not already exist
      * It is an error to specify NOCREATE together with either CAPACITY or ERROR .
-     * @return
      */
     public InsertOptions nocreate() {
         options.add(NOCREATE.getRaw());

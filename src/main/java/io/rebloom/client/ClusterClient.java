@@ -155,7 +155,7 @@ public class ClusterClient extends JedisCluster {
      * @param name The name of the filter
      * @param options {@link io.rebloom.client.InsertOptions}
      * @param items items to add to the filter
-     * @return
+     * @return array of booleans
      */
     public boolean[] insert(String name, InsertOptions options, String... items) {
         return (new JedisClusterCommand<boolean[]>(this.connectionHandler, this.maxAttempts) {
@@ -259,7 +259,7 @@ public class ClusterClient extends JedisCluster {
 
     /**
      * Remove the filter
-     * @param name
+     * @param name Name of filter to delete
      * @return true if delete the filter, false is not delete the filter
      */
     public boolean delete(String name) {
@@ -275,7 +275,7 @@ public class ClusterClient extends JedisCluster {
 
     /**
      * Get information about the filter
-     * @param name
+     * @param name Name of filter to get info
      * @return Return information
      */
     public Map<String, Object> info(String name) {
@@ -304,10 +304,6 @@ public class ClusterClient extends JedisCluster {
      *
      * Reserve a topk filter.
      * @param key The key of the filter
-     * @param topk
-     * @param width
-     * @param depth
-     * @param decay
      *
      * Note that if a filter is not reserved, a new one is created when {@link #add(String, byte[])}
      * is called.
@@ -353,6 +349,7 @@ public class ClusterClient extends JedisCluster {
      * Adds an item to the filter
      * @param key The key of the filter
      * @param item The item to increment
+     * @param increment The increment
      * @return item dropped from the list.
      */
     public String topkIncrBy(String key, String item, long increment) {
