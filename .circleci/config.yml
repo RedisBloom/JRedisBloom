@@ -56,7 +56,7 @@ jobs:
 
       - run: mvn cobertura:cobertura
 
-      - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
+      - run: bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/codecov)
 
       - early_return_for_forked_pull_requests
 
