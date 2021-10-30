@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Map;
 import org.junit.Test;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
@@ -14,7 +15,7 @@ import redis.clients.jedis.exceptions.JedisException;
  * @author Mark Nunberg
  */
 public class ClientTest extends TestBase {
-    
+
     @Test
     public void createWithPool() {
       Client refClient;
@@ -24,6 +25,18 @@ public class ClientTest extends TestBase {
         assertTrue(client.delete("createBloom"));
       }
       assertThrows(JedisException.class, () -> refClient.createFilter("myBloom", 100, 0.001));
+    }
+
+    @Test
+    public void createWithJedisInstance() {
+      Client refClient;
+      Jedis jedis = new Jedis();
+      try(Client client = new Client(jedis)){
+        client.createFilter("createBloom", 100, 0.001);
+        assertTrue(client.delete("createBloom"));
+      } catch (Exception e) {
+        fail();
+      }
     }
 
     @Test

@@ -37,6 +37,7 @@ import redis.clients.jedis.util.SafeEncoder;
 public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
   private final Pool<Jedis> pool;
+  private Jedis jedis;
 
   /**
    * Create a new client to ReBloom
@@ -46,6 +47,10 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     this.pool = pool;
   }
 
+  public Client(Jedis jedis) {
+    this.jedis = jedis;
+    this.pool = null;
+  }
 
   /**
    * Create a new client to ReBloom
@@ -80,11 +85,16 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
   @Override
   public void close(){
-    this.pool.close();
+    if (pool != null) {
+      pool.close();
+    }
+    if (jedis != null) {
+      jedis.close();
+    }
   }
 
   Jedis _conn() {
-    return pool.getResource();
+    return jedis != null ? jedis : pool.getResource();
   }
 
   /**
@@ -395,7 +405,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
          .getMultiBulkReply();
    }
  }
- 
+
  //
  // Count-Min-Sketch Implementation
  //
