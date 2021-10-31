@@ -37,7 +37,7 @@ import redis.clients.jedis.util.SafeEncoder;
 public class Client implements Cuckoo, CMS, TDigest, Closeable {
 
   private final Pool<Jedis> pool;
-  private Jedis jedis;
+  private final Jedis jedis;
 
   /**
    * Create a new client to ReBloom
@@ -45,6 +45,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
    */
   public Client(Pool<Jedis> pool){
     this.pool = pool;
+    this.jedis = null;
   }
 
   public Client(Jedis jedis) {
@@ -72,6 +73,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     conf.setFairness(true);
 
     pool = new JedisPool(conf, host, port, timeout);
+    jedis = null;
   }
 
   /**
