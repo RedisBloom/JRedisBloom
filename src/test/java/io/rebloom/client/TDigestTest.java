@@ -7,7 +7,6 @@ import io.rebloom.client.td.TDigestValueWeight;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import redis.clients.jedis.exceptions.JedisDataException;
 
