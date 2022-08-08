@@ -16,7 +16,7 @@ public interface TDigest {
 
   double tdigestCDF(String key, double value);
 
-  double tdigestQuantile(String key, double quantile);
+  Map<Double, Double> tdigestQuantile(String key, double... quantile);
 
   double tdigestMin(String key);
 

@@ -1,18 +1,8 @@
 package io.rebloom.client;
 
 import java.io.Closeable;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.*;
+import java.util.stream.*;
 
 import io.rebloom.client.cf.*;
 import io.rebloom.client.cms.*;
@@ -848,9 +838,15 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   }
 
   @Override
-  public double tdigestQuantile(String key, double quantile) {
+  public Map<Double, Double> tdigestQuantile(String key, double... quantile) {
+    String[] args = new String[1 + quantile.length];
+    int ain = 0;
+    args[ain++] = key;
+    for (double q : quantile) {
+      args[ain++] = Double.toString(q);
+    }
     try (Jedis jedis = _conn()) {
-      return executeCommand(jedis, DOUBLE, TDigestCommand.QUANTILE, key, Double.toString(quantile));
+      return executeCommand(jedis, DOUBLE_MAP, TDigestCommand.QUANTILE, args);
     }
   }
 
@@ -882,9 +878,21 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     @Override
     public Map<String, Object> build(Object o) {
       List<Object> values = (List<Object>) SafeEncoder.encodeObject(o);
-      Map<String, Object> map = new HashMap<>(values.size() / 2);
+      Map<String, Object> map = new HashMap<>(values.size() / 2, 1f);
       for (int i = 0; i < values.size(); i += 2) {
         map.put((String) values.get(i), values.get(i + 1));
+      }
+      return map;
+    }
+  };
+
+  private static final Builder<Map<Double, Double>> DOUBLE_MAP = new Builder<Map<Double, Double>>() {
+    @Override
+    public Map<Double, Double> build(Object o) {
+      List<Object> values = (List<Object>) o;
+      Map<Double, Double> map = new HashMap<>(values.size() / 2, 1f);
+      for (int i = 0; i < values.size(); i += 2) {
+        map.put(DOUBLE.build(values.get(i)), DOUBLE.build(values.get(i + 1)));
       }
       return map;
     }
