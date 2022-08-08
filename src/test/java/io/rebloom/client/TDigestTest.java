@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import io.rebloom.client.td.TDigestValueWeight;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import redis.clients.jedis.exceptions.JedisDataException;
 
@@ -142,11 +144,11 @@ public class TDigestTest extends TestBase {
     }
 
     cl.tdigestCreate("tdqnt", 100);
-    assertEquals(Double.NaN, cl.tdigestQuantile("tdqnt", 0.5), 0d);
+    assertEquals(Collections.singletonMap(0.5, Double.NaN), cl.tdigestQuantile("tdqnt", 0.5));
 
     cl.tdigestAdd("tdqnt", definedAddParam(1, 1), definedAddParam(1, 1), definedAddParam(1, 1));
     cl.tdigestAdd("tdqnt", definedAddParam(100, 1), definedAddParam(100, 1));
-    assertEquals(1.0, cl.tdigestQuantile("tdqnt", 0.5), 0.01);
+    assertEquals(Collections.singletonMap(0.5, 1.0), cl.tdigestQuantile("tdqnt", 0.5));
   }
 
   @Test
