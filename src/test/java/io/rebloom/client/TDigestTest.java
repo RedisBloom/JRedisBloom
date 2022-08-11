@@ -144,11 +144,11 @@ public class TDigestTest extends TestBase {
     }
 
     cl.tdigestCreate("tdqnt", 100);
-    assertEquals(Collections.singletonMap(0.5, Double.NaN), cl.tdigestQuantile("tdqnt", 0.5));
+    assertEquals(Collections.singletonList(Double.NaN), cl.tdigestQuantile("tdqnt", 0.5));
 
     cl.tdigestAdd("tdqnt", definedAddParam(1, 1), definedAddParam(1, 1), definedAddParam(1, 1));
     cl.tdigestAdd("tdqnt", definedAddParam(100, 1), definedAddParam(100, 1));
-    assertEquals(Collections.singletonMap(0.5, 1.0), cl.tdigestQuantile("tdqnt", 0.5));
+    assertEquals(Collections.singletonList(1.0), cl.tdigestQuantile("tdqnt", 0.5));
   }
 
   @Test

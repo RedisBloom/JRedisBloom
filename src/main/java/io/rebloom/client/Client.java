@@ -838,7 +838,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   }
 
   @Override
-  public Map<Double, Double> tdigestQuantile(String key, double... quantile) {
+  public List<Double> tdigestQuantile(String key, double... quantile) {
     String[] args = new String[1 + quantile.length];
     int ain = 0;
     args[ain++] = key;
@@ -846,7 +846,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
       args[ain++] = Double.toString(q);
     }
     try (Jedis jedis = _conn()) {
-      return executeCommand(jedis, DOUBLE_MAP, TDigestCommand.QUANTILE, args);
+      return executeCommand(jedis, DOUBLE_LIST, TDigestCommand.QUANTILE, args);
     }
   }
 
@@ -886,15 +886,15 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
     }
   };
 
-  private static final Builder<Map<Double, Double>> DOUBLE_MAP = new Builder<Map<Double, Double>>() {
+  private static final Builder<List<Double>> DOUBLE_LIST = new Builder<List<Double>>() {
     @Override
-    public Map<Double, Double> build(Object o) {
+    public List<Double> build(Object o) {
       List<Object> values = (List<Object>) o;
-      Map<Double, Double> map = new HashMap<>(values.size() / 2, 1f);
-      for (int i = 0; i < values.size(); i += 2) {
-        map.put(DOUBLE.build(values.get(i)), DOUBLE.build(values.get(i + 1)));
+      List<Double> list = new ArrayList<>(values.size());
+      for (Object obj : values) {
+        list.add(DOUBLE.build(obj));
       }
-      return map;
+      return list;
     }
   };
 
