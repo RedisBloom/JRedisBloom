@@ -1,5 +1,6 @@
 package io.rebloom.client.td;
 
+import java.util.List;
 import java.util.Map;
 
 public interface TDigest {
@@ -16,7 +17,7 @@ public interface TDigest {
 
   double tdigestCDF(String key, double value);
 
-  Map<Double, Double> tdigestQuantile(String key, double... quantile);
+  List<Double> tdigestQuantile(String key, double... quantile);
 
   double tdigestMin(String key);
 
