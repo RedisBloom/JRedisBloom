@@ -785,7 +785,7 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   public void tdigestCreate(String key, int compression) {
     try (Jedis jedis = _conn()) {
       String response = sendCommand(jedis, TDigestCommand.CREATE, SafeEncoder.encode(key),
-          Protocol.toByteArray(compression)).getStatusCodeReply();
+          SafeEncoder.encode("COMPRESSION"), Protocol.toByteArray(compression)).getStatusCodeReply();
       checkOK(response);
     }
   }
