@@ -800,10 +800,14 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   }
 
   @Override
-  public void tdigestMerge(String toKey, String fromKey) {
+  public void tdigestMerge(String toKey, String... fromKey) {
+    String[] args = new String[2 + fromKey.length];
+    int ain = 0;
+    args[ain++] = toKey;
+    args[ain++] = Integer.toString(fromKey.length);
+    System.arraycopy(fromKey, 0, args, ain, fromKey.length);
     try (Jedis jedis = _conn()) {
-      String response = sendCommand(jedis, TDigestCommand.MERGE,
-          SafeEncoder.encode(toKey), SafeEncoder.encode(fromKey)).getStatusCodeReply();
+      String response = sendCommand(jedis, TDigestCommand.MERGE, args).getStatusCodeReply();
       checkOK(response);
     }
   }
@@ -831,9 +835,15 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   }
 
   @Override
-  public double tdigestCDF(String key, double value) {
+  public List<Double> tdigestCDF(String key, double... value) {
+    String[] args = new String[1 + value.length];
+    int ain = 0;
+    args[ain++] = key;
+    for (double q : value) {
+      args[ain++] = Double.toString(q);
+    }
     try (Jedis jedis = _conn()) {
-      return executeCommand(jedis, DOUBLE, TDigestCommand.CDF, key, Double.toString(value));
+      return executeCommand(jedis, DOUBLE_LIST, TDigestCommand.CDF, args);
     }
   }
 
