@@ -3,9 +3,9 @@ package io.rebloom.client.td;
 public class TDigestValueWeight {
 
   private final double value;
-  private final double weight;
+  private final long weight;
 
-  public TDigestValueWeight(double value, double weight) {
+  public TDigestValueWeight(double value, long weight) {
     this.value = value;
     this.weight = weight;
   }
@@ -14,7 +14,7 @@ public class TDigestValueWeight {
     return value;
   }
 
-  public double getWeight() {
+  public long getWeight() {
     return weight;
   }
 }
