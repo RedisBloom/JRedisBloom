@@ -9,13 +9,13 @@ public interface TDigest {
 
   void tdigestReset(String key);
 
-  void tdigestMerge(String toKey, String fromKey);
+  void tdigestMerge(String toKey, String... fromKey);
 
   Map<String, Object> tdigestInfo(String key);
 
   void tdigestAdd(String key, TDigestValueWeight... valueWeights);
 
-  double tdigestCDF(String key, double value);
+  List<Double> tdigestCDF(String key, double... value);
 
   List<Double> tdigestQuantile(String key, double... quantile);
 

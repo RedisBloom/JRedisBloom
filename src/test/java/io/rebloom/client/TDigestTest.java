@@ -1,11 +1,10 @@
 package io.rebloom.client;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import io.rebloom.client.td.TDigestValueWeight;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 import org.junit.Test;
@@ -107,17 +106,6 @@ public class TDigestTest extends TestBase {
   }
 
   @Test
-  public void mergeToNone() {
-    cl.tdigestCreate("td4m", 100);
-    try {
-      cl.tdigestMerge("td2", "td4m");
-      fail("key does not exist");
-    } catch (JedisDataException jde) {
-      assertEquals("ERR T-Digest: key does not exist", jde.getMessage());
-    }
-  }
-
-  @Test
   public void cdf() {
     try {
       cl.tdigestCDF("tdcdf", 50);
@@ -127,11 +115,12 @@ public class TDigestTest extends TestBase {
     }
 
     cl.tdigestCreate("tdcdf", 100);
-    assertEquals(Double.NaN, cl.tdigestCDF("tdcdf", 50), 0d);
+    assertEquals(singletonList(Double.NaN), cl.tdigestCDF("tdcdf", 50));
 
     cl.tdigestAdd("tdcdf", definedAddParam(1, 1), definedAddParam(1, 1), definedAddParam(1, 1));
     cl.tdigestAdd("tdcdf", definedAddParam(100, 1), definedAddParam(100, 1));
-    assertEquals(0.6, cl.tdigestCDF("tdcdf", 50), 0.01);
+    assertEquals(singletonList(0.6), cl.tdigestCDF("tdcdf", 50));
+    cl.tdigestCDF("tdcdf", 25, 50, 75);
   }
 
   @Test
@@ -144,11 +133,11 @@ public class TDigestTest extends TestBase {
     }
 
     cl.tdigestCreate("tdqnt", 100);
-    assertEquals(Collections.singletonList(Double.NaN), cl.tdigestQuantile("tdqnt", 0.5));
+    assertEquals(singletonList(Double.NaN), cl.tdigestQuantile("tdqnt", 0.5));
 
     cl.tdigestAdd("tdqnt", definedAddParam(1, 1), definedAddParam(1, 1), definedAddParam(1, 1));
     cl.tdigestAdd("tdqnt", definedAddParam(100, 1), definedAddParam(100, 1));
-    assertEquals(Collections.singletonList(1.0), cl.tdigestQuantile("tdqnt", 0.5));
+    assertEquals(singletonList(1.0), cl.tdigestQuantile("tdqnt", 0.5));
   }
 
   @Test
@@ -168,10 +157,10 @@ public class TDigestTest extends TestBase {
     }
 
     cl.tdigestCreate(key, 100);
-//    assertEquals(Double.MAX_VALUE, cl.tdigestMin(key), 0d);
-//    assertEquals(Double.MIN_NORMAL, cl.tdigestMax(key), 0d);
-    assertTrue((Object) cl.tdigestMin(key) instanceof Double);
-    assertTrue((Object) cl.tdigestMax(key) instanceof Double);
+    assertEquals(Double.NaN, cl.tdigestMin(key), 0d);
+    assertEquals(Double.NaN, cl.tdigestMax(key), 0d);
+//    assertTrue((Object) cl.tdigestMin(key) instanceof Double);
+//    assertTrue((Object) cl.tdigestMax(key) instanceof Double);
 
     cl.tdigestAdd(key, definedAddParam(2, 1));
     cl.tdigestAdd(key, definedAddParam(5, 1));
@@ -180,10 +169,10 @@ public class TDigestTest extends TestBase {
   }
 
   private static TDigestValueWeight randomAddParam() {
-    return new TDigestValueWeight(random.nextDouble() * 10000, random.nextDouble() * 500 + 1);
+    return new TDigestValueWeight(random.nextDouble() * 10000, Math.abs(random.nextInt()) + 1l);
   }
 
-  private static TDigestValueWeight definedAddParam(double value, double weight) {
+  private static TDigestValueWeight definedAddParam(double value, long weight) {
     return new TDigestValueWeight(value, weight);
   }
 }
