@@ -13,7 +13,11 @@
 
 A Java Client Library for [RedisBloom](https://redisbloom.io)
 
-## Overview 
+## Deprecation notice
+
+As of [Jedis](https://github.com/redis/jedis) version 4.2.0, this library is deprecated. Its features have been merged into Jedis. Please either install it from [maven](https://mvnrepository.com/artifact/redis.clients/jedis) or [the repo](https://github.com/redis/jedis)
+
+## Overview
 
 This project contains a Java library abstracting the API of the RedisBloom Redis module, that implements a high
 performance bloom filter with an easy-to-use API
