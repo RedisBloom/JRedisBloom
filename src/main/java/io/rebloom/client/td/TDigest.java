@@ -13,7 +13,7 @@ public interface TDigest {
 
   Map<String, Object> tdigestInfo(String key);
 
-  void tdigestAdd(String key, TDigestValueWeight... valueWeights);
+  void tdigestAdd(String key, double... values);
 
   List<Double> tdigestCDF(String key, double... value);
 

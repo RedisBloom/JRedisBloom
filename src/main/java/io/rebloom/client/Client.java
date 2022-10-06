@@ -820,13 +820,12 @@ public class Client implements Cuckoo, CMS, TDigest, Closeable {
   }
 
   @Override
-  public void tdigestAdd(String key, TDigestValueWeight... valueWeights) {
-    byte[][] args = new byte[1 + 2 * valueWeights.length][];
+  public void tdigestAdd(String key, double... values) {
+    byte[][] args = new byte[1 + values.length][];
     int ain = 0;
     args[ain++] = SafeEncoder.encode(key);
-    for (TDigestValueWeight vw : valueWeights) {
-      args[ain++] = Protocol.toByteArray(vw.getValue());
-      args[ain++] = Protocol.toByteArray(vw.getWeight());
+    for (double v : values) {
+      args[ain++] = Protocol.toByteArray(v);
     }
     try (Jedis jedis = _conn()) {
       String response = sendCommand(jedis, TDigestCommand.ADD, args).getStatusCodeReply();
