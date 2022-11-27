@@ -4,7 +4,6 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom)
 [![Javadocs](https://www.javadoc.io/badge/com.redislabs/jrebloom.svg)](https://www.javadoc.io/doc/com.redislabs/jrebloom)
 [![Codecov](https://codecov.io/gh/RedisBloom/JRedisBloom/branch/master/graph/badge.svg)](https://codecov.io/gh/RedisBloom/JRedisBloom)
-[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/RedisBloom/JRedisBloom.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/RedisBloom/JRedisBloom/context:java)
 [![Known Vulnerabilities](https://snyk.io/test/github/RedisBloom/JRedisBloom/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/RedisBloom/JRedisBloom?targetFile=pom.xml)
 
 # JRedisBloom
@@ -21,7 +20,7 @@ As of [Jedis](https://github.com/redis/jedis) version 4.2.0, this library is dep
 
 This project contains a Java library abstracting the API of the RedisBloom Redis module, that implements a high
 performance bloom filter with an easy-to-use API
- 
+
 See [http://redisbloom.io](http://redisbloom.io) for installation instructions of the module.
 
 
