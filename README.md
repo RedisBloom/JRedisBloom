@@ -1,6 +1,5 @@
 [![license](https://img.shields.io/github/license/RedisBloom/JRedisBloom.svg)](https://github.com/RedisBloom/JRedisBloom)
 [![GitHub issues](https://img.shields.io/github/release/RedisBloom/JRedisBloom.svg)](https://github.com/RedisBloom/JRedisBloom/releases/latest)
-[![CircleCI](https://circleci.com/gh/RedisBloom/JRedisBloom/tree/master.svg?style=svg)](https://circleci.com/gh/RedisBloom/JRedisBloom/tree/master)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jrebloom)
 [![Javadocs](https://www.javadoc.io/badge/com.redislabs/jrebloom.svg)](https://www.javadoc.io/doc/com.redislabs/jrebloom)
 [![Codecov](https://codecov.io/gh/RedisBloom/JRedisBloom/branch/master/graph/badge.svg)](https://codecov.io/gh/RedisBloom/JRedisBloom)
